@@ -23,12 +23,40 @@ viewer's own zone via `toLocaleString` — no timezone picker, no server work.
 **Later fixtures are provisional.** Broadcasters move matches for TV about five weeks
 out; the fetch runs every 30 minutes, so reschedules flow through as they are announced.
 
+## What it does
+
+- **Table** with a computed form guide (last 5), CL and relegation zones.
+- **Fixtures** across the league *and* the cups — tap any match for lineups
+  (formation + XI + bench), match stats, and goalscorers, pulled live from ESPN
+  on click so the page itself stays small.
+- **My Kickoff Times** — every match converted to your timezone and split into
+  three mutually exclusive buckets: easy, clashes with work, and set-an-alarm.
+- **Calendar** — one `.ics` for your club's whole season, or a single match, plus
+  a Google Calendar link. Built in the browser; there is no backend.
+- **Odds** — Kalshi's market-implied win/draw/win where a market is quoted.
+- **Comments** — GitHub Discussions via giscus, loaded only when that tab is opened.
+
+## Competitions
+
+Premier League from openfootball; FA Cup, Champions League and EFL Cup from the same
+free ESPN feed, filtered to ties involving a Premier League club. The two cups return
+nothing until their draws are made — an empty competition is expected, not a failure.
+
+## Prediction markets
+
+Kalshi's `KXEPLGAME` series carries a home / away / tie market per fixture, public and
+unauthenticated. Kalshi lists fixtures weeks ahead but quotes nothing until close to
+kickoff, so most fixtures legitimately carry no price. Their short labels ("Brighton",
+"Newcastle") are resolved to clubs by exact-then-unique-prefix match; anything ambiguous
+is dropped rather than guessed, because wrong odds are worse than no odds. Polymarket
+carries no Premier League markets at all.
+
 ## Files
 
     fetch_data.py   both feeds -> data.json   (stdlib only)
     test_fetch.py   self-check: DST + name matching + data integrity
     index.html      the whole UI, one file, no framework
-    data.json       generated, ~45KB
+    data.json       generated, ~50KB
 
 ## Run locally
 

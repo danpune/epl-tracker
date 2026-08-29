@@ -57,6 +57,39 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .m .tm2{color:var(--muted);font-size:12.5px;min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
 .m .w{font-weight:800}
 .m .clock{color:var(--live);font-size:11px;font-weight:700}
+.m{cursor:pointer}
+.m .go{color:var(--muted);font-size:11px;flex:0 0 auto;width:12px;text-align:center}
+.cal{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;color:var(--text);text-decoration:none;background:var(--card);cursor:pointer;margin:0 6px 8px 0}
+.cal:hover{border-color:var(--acc);color:var(--acc)}
+.detail{background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;padding:12px 14px;margin:-7px 0 8px}
+.detail h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.xi{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.xi .side h5{margin:0 0 5px;font-size:13.5px;font-weight:800}
+.xi .side .form{font-size:11px;color:var(--muted);font-weight:600}
+.xi .p{font-size:13px;padding:2.5px 0;display:flex;gap:7px;border-top:1px solid var(--line)}
+.xi .p .no{color:var(--muted);width:20px;flex:0 0 auto;font-variant-numeric:tabular-nums;text-align:right}
+.xi .p .po{color:var(--muted);font-size:11px;margin-left:auto;flex:0 0 auto}
+.xi .subs{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.5}
+.sbar{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:3px 0}
+.sbar .lv,.sbar .rv{width:38px;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.sbar .rv{text-align:right}
+.sbar .nm{width:112px;color:var(--muted);text-align:center;flex:0 0 auto;font-size:11px}
+.sbar .t{flex:1;display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--bg)}
+.sbar .t i{display:block}.sbar .t .l{background:var(--acc)}.sbar .t .r{background:#c3b6d2}
+.ev{font-size:13px;padding:3px 0;border-top:1px solid var(--line);display:flex;gap:8px}
+.ev .mn{color:var(--muted);width:34px;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.formpill{display:inline-flex;gap:2px}
+.formpill i{width:15px;height:15px;border-radius:3px;font-style:normal;font-size:9.5px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.formpill .fw{background:#137a4a}.formpill .fd{background:#9b93a6}.formpill .fl{background:#c0392b}
+.cbadge{font-size:9.5px;letter-spacing:.07em;font-weight:800;text-transform:uppercase;border-radius:4px;padding:2px 5px;background:#ece4f4;color:var(--acc);flex:0 0 auto}
+.cbadge.ucl{background:#e0e9f7;color:#1a4a8a}.cbadge.fa{background:#fbe8e4;color:#a8341c}.cbadge.efl{background:#e6f0e8;color:#1c6b45}
+.odds{display:flex;gap:1px;margin:0 0 7px;border-radius:0 0 9px 9px;overflow:hidden;height:20px;font-size:10px;font-weight:700}
+.odds div{display:flex;align-items:center;justify-content:center;color:#fff;min-width:0;overflow:hidden;white-space:nowrap}
+.odds .oh{background:#4a2a6b}.odds .od{background:#9b93a6}.odds .oa{background:#6b4a8a}
+.owrap{margin-bottom:7px}
+.owrap .m{margin-bottom:0;border-radius:10px 10px 0 0}
+.olab{font-size:11px;color:var(--muted);margin:-2px 0 9px;padding-left:2px}
+.olab a{color:var(--muted)}
 .more{display:block;width:100%;margin:14px 0;padding:11px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--acc);font-size:14px;font-weight:700;cursor:pointer}
 /* kickoff times */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
@@ -73,6 +106,9 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .note{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.55}
 footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
 footer a{color:var(--acc)}
+.saybox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.saybox .gh{display:inline-block;margin-top:10px;background:var(--acc);color:#fff;text-decoration:none;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700}
+.saybox .fine{font-size:12.5px;color:var(--muted);margin-top:12px}
 .err{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--live);border-radius:10px;padding:14px}
 @media(max-width:560px){
   h1{font-size:24px}
@@ -100,6 +136,7 @@ footer a{color:var(--acc)}
   <button data-t="table" class="on">Table</button>
   <button data-t="fix">Fixtures</button>
   <button data-t="tz">My Kickoff Times</button>
+  <button data-t="say">Comments</button>
 </nav>
 
 <main id="view"><p class="sub">Loading…</p></main>
@@ -124,6 +161,24 @@ function dt(m){ return new Date(m.utc.replace('Z',':00Z')); }
 var fDay = new Intl.DateTimeFormat([], {weekday:'long', month:'short', day:'numeric'});
 var fTime = new Intl.DateTimeFormat([], {hour:'numeric', minute:'2-digit'});
 
+/* ---------- form guide (computed from our own results — no extra request) ---------- */
+function formOf(k, n){
+  var out = [];
+  D.matches.forEach(function(m){
+    if (m.c !== 'PL' || !m.done || m.hs == null) return;
+    if (m.h !== k && m.a !== k) return;
+    var gf = m.h === k ? m.hs : m['as'], ga = m.h === k ? m['as'] : m.hs;
+    out.push(gf > ga ? 'W' : gf < ga ? 'L' : 'D');
+  });
+  return out.slice(-(n || 5));
+}
+function formPill(k){
+  var f = formOf(k, 5);
+  if (!f.length) return '<span class="dim" style="color:var(--muted)">–</span>';
+  return '<span class="formpill">' + f.map(function(r){
+    return '<i class="f'+r.toLowerCase()+'" title="'+r+'">'+r+'</i>'; }).join('') + '</span>';
+}
+
 /* ---------- table ---------- */
 function renderTable(){
   var rows = D.table.map(function(r){
@@ -137,28 +192,174 @@ function renderTable(){
       + '<td class="hide-s">'+r.w+'</td><td class="hide-s">'+r.d+'</td><td class="hide-s">'+r.l+'</td>'
       + '<td class="hide-s">'+r.gf+'</td><td class="hide-s">'+r.ga+'</td>'
       + '<td>'+(r.gd > 0 ? '+' : '')+r.gd+'</td>'
+      + '<td class="hide-s">'+formPill(r.t)+'</td>'
       + '<td class="pts">'+r.pts+'</td></tr>';
   }).join('');
   view.innerHTML = '<table><thead><tr><th>#</th><th>Club</th><th>Pl</th>'
     + '<th class="hide-s">W</th><th class="hide-s">D</th><th class="hide-s">L</th>'
-    + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th>Pts</th></tr></thead>'
+    + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th class="hide-s">Form</th><th>Pts</th></tr></thead>'
     + '<tbody>'+rows+'</tbody></table>'
     + '<div class="key"><span><i style="background:#137a4a"></i>Champions League</span>'
     + '<span><i style="background:#c0392b"></i>Relegation</span></div>';
 }
 
+/* ---------- calendar ---------- */
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function icsStamp(d){
+  return d.getUTCFullYear() + pad(d.getUTCMonth()+1) + pad(d.getUTCDate()) + 'T'
+       + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + '00Z';
+}
+function icsFor(list, name){
+  var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//epl-tracker//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+               'X-WR-CALNAME:' + name];
+  list.forEach(function(m){
+    var st = dt(m), en = new Date(st.getTime() + 2*60*60*1000);
+    var title = team(m.h).name + ' v ' + team(m.a).name + (m.c && m.c !== 'PL' ? ' (' + (COMP[m.c]||m.c) + ')' : '');
+    lines.push('BEGIN:VEVENT',
+      'UID:' + (m.e || (m.h + m.a + m.utc)) + '@epl-tracker',
+      'DTSTAMP:' + icsStamp(new Date(D.updated)),
+      'DTSTART:' + icsStamp(st), 'DTEND:' + icsStamp(en),
+      'SUMMARY:' + title,
+      'DESCRIPTION:' + (m.c === 'PL' ? 'Premier League matchday ' + m.md : (COMP[m.c]||m.c)),
+      'END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+function downloadICS(list, name, file){
+  var blob = new Blob([icsFor(list, name)], {type:'text/calendar;charset=utf-8'});
+  var url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = file; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function gcalLink(m){
+  var st = dt(m), en = new Date(st.getTime() + 2*60*60*1000);
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent(team(m.h).name + ' v ' + team(m.a).name)
+    + '&dates=' + icsStamp(st) + '/' + icsStamp(en)
+    + '&details=' + encodeURIComponent(m.c === 'PL' ? 'Premier League matchday ' + m.md : (COMP[m.c]||m.c));
+}
+
+/* ---------- match detail: lineups, stats, key events (fetched on click) ---------- */
+var detailCache = {};
+function statBar(name, l, r){
+  var ln = parseFloat(l) || 0, rn = parseFloat(r) || 0, tot = ln + rn;
+  var lp = tot ? Math.round(ln/tot*100) : 50;
+  return '<div class="sbar"><div class="lv">'+esc(l)+'</div>'
+    + '<div class="t"><i class="l" style="width:'+lp+'%"></i><i class="r" style="width:'+(100-lp)+'%"></i></div>'
+    + '<div class="rv">'+esc(r)+'</div><div class="nm">'+esc(name)+'</div></div>';
+}
+var STATS = [['possessionPct','Possession'],['totalShots','Shots'],['shotsOnTarget','On target'],
+             ['wonCorners','Corners'],['foulsCommitted','Fouls'],['yellowCards','Yellows']];
+
+function renderDetail(m, box){
+  var d = detailCache[m.e];
+  if (d === 'error'){ box.innerHTML = '<div class="detail">Could not load match detail.</div>'; return; }
+  if (!d){ box.innerHTML = '<div class="detail">Loading…</div>'; return; }
+
+  var html = '<div class="detail">';
+
+  // calendar row — always available, even before a lineup exists
+  html += '<a class="cal" id="ics-'+m.e+'">＋ Add to calendar (.ics)</a>'
+        + '<a class="cal" href="'+esc(gcalLink(m))+'" target="_blank" rel="noopener noreferrer">＋ Google Calendar</a>';
+
+  var rs = d.rosters || [];
+  if (rs.length === 2 && (rs[0].roster || []).length){
+    html += '<h4>Lineups</h4><div class="xi">';
+    rs.forEach(function(t){
+      var players = t.roster || [];
+      var xi = players.filter(function(p){ return p.starter; });
+      var subs = players.filter(function(p){ return !p.starter; });
+      html += '<div class="side"><h5>'+esc((t.team||{}).displayName||'')+'</h5>'
+            + '<div class="form">'+esc(t.formation || '')+'</div>';
+      xi.forEach(function(p){
+        var a = p.athlete || {};
+        html += '<div class="p"><span class="no">'+esc(p.jersey||'')+'</span>'
+              + '<span>'+esc(a.displayName||'')+'</span>'
+              + '<span class="po">'+esc((p.position||{}).abbreviation||'')+'</span></div>';
+      });
+      if (subs.length) html += '<div class="subs"><b>Bench:</b> '
+            + subs.map(function(p){ return esc((p.athlete||{}).displayName||''); }).join(', ') + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<h4>Lineups</h4><p class="note" style="margin:0">Lineups are published about an hour before kickoff.</p>';
+  }
+
+  var bt = (d.boxscore || {}).teams || [];
+  if (bt.length === 2){
+    var get = function(t, n){
+      var st = (t.statistics || []).filter(function(x){ return x.name === n; })[0];
+      return st ? st.displayValue : null;
+    };
+    var rows = STATS.map(function(p){
+      var l = get(bt[0], p[0]), r = get(bt[1], p[0]);
+      return (l == null && r == null) ? '' : statBar(p[1], l == null ? '–' : l, r == null ? '–' : r);
+    }).join('');
+    if (rows.replace(/\s/g,'')) html += '<h4>Match stats</h4>' + rows;
+  }
+
+  var ke = (d.keyEvents || []).filter(function(e){
+    var ty = ((e.type || {}).text || '').toLowerCase();
+    return ty.indexOf('goal') > -1 || ty.indexOf('card') > -1;
+  });
+  if (ke.length){
+    html += '<h4>Key events</h4>';
+    ke.forEach(function(e){
+      var who = (e.participants || []).map(function(p){ return ((p.athlete||{}).displayName)||''; })
+                 .filter(Boolean).join(', ');
+      html += '<div class="ev"><span class="mn">'+esc(((e.clock||{}).displayValue)||'')+'</span>'
+            + '<span>'+esc((e.type||{}).text||'')+(who ? ' — ' + esc(who) : '')+'</span></div>';
+    });
+  }
+
+  html += '</div>';
+  box.innerHTML = html;
+  var btn = document.getElementById('ics-'+m.e);
+  if (btn) btn.onclick = function(){
+    downloadICS([m], team(m.h).short+' v '+team(m.a).short, 'match.ics');
+  };
+}
+
+function openDetail(m, box){
+  if (!m.e){ box.innerHTML = '<div class="detail">No match detail available for this fixture yet.</div>'; return; }
+  renderDetail(m, box);
+  if (detailCache[m.e]) return;
+  var path = (D.paths || {})[m.c || 'PL'] || 'eng.1';
+  fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/'+path+'/summary?event='+encodeURIComponent(m.e))
+    .then(function(r){ return r.json(); })
+    .then(function(j){ detailCache[m.e] = j; renderDetail(m, box); })
+    .catch(function(){ detailCache[m.e] = 'error'; renderDetail(m, box); });
+}
+
 /* ---------- fixtures ---------- */
+var COMP = {UCL:'Champions League', FA:'FA Cup', EFL:'EFL Cup'};
 function matchRow(m){
   var d = dt(m), mine = (m.h === TEAM || m.a === TEAM);
   var hw = m.done && m.hs > m['as'], aw = m.done && m['as'] > m.hs;
   var mid = m.live ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'<div class="clock">'+esc(m.clock||'LIVE')+'</div></div>'
           : m.done ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'</div>'
           : '<div class="tm2">'+fTime.format(d)+'</div>';
-  return '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'">'
+  var badge = m.c && m.c !== 'PL'
+    ? '<span class="cbadge '+m.c.toLowerCase()+'" title="'+esc(COMP[m.c]||m.c)+'">'+esc(m.c)+'</span>' : '';
+  var row = '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'" data-i="'+m._i+'">'
     + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
     + mid
-    + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div>'
+    + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+badge+'</div>'
+    + '<div class="go">\u203a</div>'
     + '</div>';
+
+  if (!m.o) return row;
+  // Kalshi implied probabilities. They carry an overround, so normalise to 100 for the bar.
+  var tot = m.o[0] + m.o[1] + m.o[2] || 1;
+  var pc = m.o.map(function(x){ return Math.round(x / tot * 100); });
+  return '<div class="owrap">' + row
+    + '<div class="odds" title="Market-implied chance, from Kalshi">'
+    +   '<div class="oh" style="width:'+pc[0]+'%">'+(pc[0] >= 12 ? pc[0]+'%' : '')+'</div>'
+    +   '<div class="od" style="width:'+pc[1]+'%">'+(pc[1] >= 12 ? 'draw '+pc[1]+'%' : '')+'</div>'
+    +   '<div class="oa" style="width:'+pc[2]+'%">'+(pc[2] >= 12 ? pc[2]+'%' : '')+'</div>'
+    + '</div></div>';
 }
 
 function renderFixtures(){
@@ -188,6 +389,31 @@ function renderFixtures(){
   document.getElementById('tog').onclick = function(){ showAll = !showAll; renderFixtures(); };
   var b = document.getElementById('past');
   if (b) b.onclick = function(){ showPast = !showPast; renderFixtures(); window.scrollTo(0, 0); };
+
+  // one click puts the whole season in your calendar app
+  var mineList = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
+  var bar = document.createElement('div');
+  bar.innerHTML = '<a class="cal" id="allics">\uFF0B Add all '+mineList.length+' '
+                + esc(team(TEAM).short)+' matches to your calendar (.ics)</a>'
+                + '<span class="olab">Tap any match for lineups, stats and a single-match calendar link.</span>';
+  view.insertBefore(bar, view.firstChild.nextSibling);
+  document.getElementById('allics').onclick = function(){
+    downloadICS(mineList, team(TEAM).name + ' 2026/27', 'epl-' + TEAM + '.ics');
+  };
+
+  view.onclick = function(ev){
+    var row = ev.target.closest ? ev.target.closest('.m') : null;
+    if (!row || !view.contains(row)) return;
+    var m = D.matches[+row.dataset.i];
+    var nxt = row.parentNode.classList && row.parentNode.classList.contains('owrap')
+              ? row.parentNode.nextSibling : row.nextSibling;
+    if (nxt && nxt.className === 'detailbox'){ nxt.parentNode.removeChild(nxt); return; }
+    var box = document.createElement('div');
+    box.className = 'detailbox';
+    var anchor = row.parentNode.classList && row.parentNode.classList.contains('owrap') ? row.parentNode : row;
+    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    openDetail(m, box);
+  };
 }
 
 /* ---------- kickoff times ---------- */
@@ -214,6 +440,14 @@ function renderTZ(){
       + '<div class="v">'+n+'</div></div>';
   }).join('');
 
+  // name the competitions actually in the count, so the total is never a mystery
+  var byComp = {};
+  mine.forEach(function(m){ var c = m.c || 'PL'; byComp[c] = (byComp[c] || 0) + 1; });
+  var parts = Object.keys(byComp).map(function(c){
+    return byComp[c] + ' ' + (c === 'PL' ? 'league' : (COMP[c] || c));
+  });
+  var comps = parts.length > 1 ? ' (' + parts.join(', ') + ')' : '';
+
   var t = team(TEAM);
   view.innerHTML =
       '<div class="cards">'
@@ -224,17 +458,61 @@ function renderTZ(){
     + '</div>'
     + '<div class="bars"><div class="l" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:9px">'
     +   esc(t.short)+' kickoffs by your local time</div>'+bars+'</div>'
-    + '<p class="note">All '+mine.length+" of "+esc(t.name)+"'s league matches, converted from UK time to <b>"+esc(TZ)+'</b>. '
+    + '<p class="note">All '+mine.length+" of "+esc(t.name)+"'s scheduled matches"+comps+", converted from UK time to <b>"+esc(TZ)+'</b>. '
     + 'The three counts above add up to '+mine.length+' — every match lands in exactly one. '
     + 'UK clocks change on 25 Oct and 28 Mar, so the same 3pm kickoff shifts by an hour for you twice this season; that is already handled here.<br><br>'
     + '<b>Later fixtures are provisional.</b> Broadcasters move matches for TV, usually about five weeks ahead. '
     + 'This page refreshes from the source a few times a day, so those moves flow through as they are announced.</p>';
 }
 
+/* ---------- comments ---------- */
+// Loaded only when the tab is opened, so the third-party script never touches
+// first paint. Falls back to a plain Discussions link if giscus does not appear.
+var sayLoaded = false;
+function renderSay(){
+  view.innerHTML =
+      '<div class="saybox" id="saybox">'
+    + '<div id="giscus-slot"></div>'
+    + '<div id="sayfall"><b>Comments load from GitHub Discussions.</b>'
+    +   '<div class="fine">If nothing appears below, the giscus app has not been installed on the repo yet '
+    +   '— the button still works.</div>'
+    +   '<a class="gh" href="https://github.com/danpune/epl-tracker/discussions/new?category=general" '
+    +   'target="_blank" rel="noopener noreferrer">Leave a comment on GitHub</a></div>'
+    + '<div class="fine">Comments are hosted on GitHub Discussions and need a GitHub account. '
+    +   'Opening this tab contacts giscus.app and github.com; the other tabs contact nobody.</div>'
+    + '</div>';
+
+  if (sayLoaded) return;
+  sayLoaded = true;
+  var sc = document.createElement('script');
+  sc.src = 'https://giscus.app/client.js';
+  sc.async = true; sc.crossOrigin = 'anonymous';
+  var attrs = {
+    'data-repo': 'danpune/epl-tracker',
+    'data-repo-id': 'R_kgDOUHqqvw',
+    'data-category': 'General',
+    'data-category-id': 'DIC_kwDOUHqqv84DEa9M',
+    'data-mapping': 'pathname',
+    'data-strict': '0',
+    'data-reactions-enabled': '1',
+    'data-emit-metadata': '0',
+    'data-input-position': 'top',
+    'data-theme': 'light',
+    'data-lang': 'en'
+  };
+  Object.keys(attrs).forEach(function(k){ sc.setAttribute(k, attrs[k]); });
+  document.getElementById('giscus-slot').appendChild(sc);
+  setTimeout(function(){
+    var f = document.getElementById('sayfall');
+    if (f && document.querySelector('iframe.giscus-frame')) f.style.display = 'none';
+  }, 4000);
+}
+
 /* ---------- shell ---------- */
 function render(){
   if (TAB === 'table') renderTable();
   else if (TAB === 'fix') renderFixtures();
+  else if (TAB === 'say') renderSay();
   else renderTZ();
 }
 
@@ -254,8 +532,10 @@ fetch('data.json').then(function(r){ return r.json(); }).then(function(d){
     .map(function(r){ return '<option value="'+r.t+'"'+(r.t===TEAM?' selected':'')+'>'+esc(team(r.t).name)+'</option>'; }).join('');
   sel.onchange = function(){ TEAM = sel.value; localStorage.setItem('epl.team', TEAM); showAll = false; showPast = false; render(); };
 
-  var played = D.matches.filter(function(m){ return m.done; }).length;
-  document.getElementById('sub').textContent = D.season + ' season · ' + played + ' of ' + D.matches.length + ' matches played';
+  D.matches.forEach(function(m, i){ m._i = i; });
+  var lg = D.matches.filter(function(m){ return m.c === 'PL'; });
+  var played = lg.filter(function(m){ return m.done; }).length;
+  document.getElementById('sub').textContent = D.season + ' season · ' + played + ' of ' + lg.length + ' league matches played';
   document.getElementById('tz').textContent = 'Times in ' + TZ;
   document.getElementById('upd').textContent = 'Updated ' + new Date(D.updated).toLocaleString();
   render();

@@ -7,7 +7,7 @@ Guards the two things that would corrupt data silently:
 """
 import json, os, sys
 from datetime import datetime, timezone
-from fetch_data import key, UK
+from fetch_data import key, resolve, UK
 
 # 1. name normaliser: the two feeds spell the same club differently
 assert key("Manchester United FC") == key("Manchester United")
@@ -22,23 +22,46 @@ assert to_utc("2026-08-22", "15:00") == "14:00Z", "August is BST (UTC+1)"
 assert to_utc("2026-12-26", "15:00") == "15:00Z", "December is GMT (UTC+0)"
 assert to_utc("2026-08-22", "12:30") == "11:30Z", "cross-checked against ESPN's own feed"
 
-# 3. data.json integrity (skipped if it has not been fetched yet)
+# 3. Kalshi label resolution: short labels must land on the right club, and an
+#    ambiguous one must resolve to nothing rather than guess (wrong odds > no odds)
+_t = {"manchesterunited": 0, "manchestercity": 0, "brightonandhovealbion": 0,
+      "newcastleunited": 0, "tottenhamhotspur": 0, "nottinghamforest": 0}
+assert resolve("Brighton", _t) == "brightonandhovealbion"
+assert resolve("Newcastle", _t) == "newcastleunited"
+assert resolve("Tottenham", _t) == "tottenhamhotspur"
+assert resolve("Manchester United", _t) == "manchesterunited"
+assert resolve("Manchester", _t) is None, "ambiguous label must not be guessed"
+assert resolve("Real Madrid", _t) is None
+
+# 4. data.json integrity (skipped if it has not been fetched yet)
 if os.path.exists("data.json"):
     d = json.load(open("data.json"))
-    assert len(d["matches"]) == 380, f'expected 380 matches, got {len(d["matches"])}'
-    assert len(d["teams"]) == 20 and len(d["table"]) == 20
+    league = [m for m in d["matches"] if m["c"] == "PL"]
+    assert len(league) == 380, f"expected 380 league matches, got {len(league)}"
+    assert len(d["table"]) == 20
+    assert len(d["teams"]) >= 20, "cup opponents are added on top of the 20 league clubs"
+    assert {m["c"] for m in d["matches"]} <= {"PL", "UCL", "FA", "EFL"}, "unknown competition tag"
     per_team = {}
-    for m in d["matches"]:
+    for m in league:
         for side in (m["h"], m["a"]):
             assert side in d["teams"], f"match references unknown club {side!r}"
             per_team[side] = per_team.get(side, 0) + 1
         datetime.strptime(m["utc"], "%Y-%m-%dT%H:%MZ")          # parses, or raises
         assert (m["hs"] is None) == (m["as"] is None), "half a scoreline"
     assert set(per_team.values()) == {38}, f"every club plays 38: got {sorted(set(per_team.values()))}"
-    # the three kickoff buckets the UI shows must partition the season, not overlap
-    for k in d["teams"]:
-        ms = [m for m in d["matches"] if k in (m["h"], m["a"])]
-        assert len(ms) == 38
+
+    # every match, cups included, must reference a club the UI can name and draw
+    for m in d["matches"]:
+        assert m["h"] in d["teams"] and m["a"] in d["teams"], f"unnamed club in {m}"
+        datetime.strptime(m["utc"], "%Y-%m-%dT%H:%MZ")
+
+    # odds, where present: three whole percentages, plausible with Kalshi's overround
+    for m in d["matches"]:
+        if "o" in m:
+            o = m["o"]
+            assert len(o) == 3 and all(0 <= x <= 100 for x in o), f"bad odds {o}"
+            assert 90 <= sum(o) <= 130, f"implied probabilities implausible: {o} sums {sum(o)}"
+            assert not m.get("done"), "settled match should not carry live odds"
 else:
     print("(no data.json yet — ran source checks only)")
 
