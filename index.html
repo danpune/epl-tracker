@@ -1053,39 +1053,6 @@ function renderHighlights(){
   };
 }
 
-/* ---------- about ---------- */
-function renderAbout(){
-  view.innerHTML = '<div class="saybox">'
-  + '<h4 style="margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Where the data comes from</h4>'
-  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
-  +   '<b>Schedule</b> — <a href="https://github.com/openfootball/football.json">openfootball/football.json</a> (CC0). '
-  +   'The full 380-match season, published months ahead.<br>'
-  +   '<b>Table, results, lineups, match stats, video, US broadcasters</b> — ESPN\'s public feed. '
-  +   'Lineups and video load only when you tap a match.<br>'
-  +   '<b>Highlights</b> — the Premier League\'s own YouTube channel. Every clip is verified '
-  +   'through YouTube\'s oEmbed endpoint against the official channel URL before it is shown, '
-  +   'and clips stamped with a previous season are rejected.<br>'
-  +   '<b>Odds</b> — <a href="https://kalshi.com">Kalshi</a>\'s KXEPLGAME markets, shown only where a market is actually quoted.<br>'
-  + '</div>'
-  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Privacy</h4>'
-  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
-  +   'No accounts, no tracking, no analytics, no cookies. The only thing stored on your device '
-  +   'is which club you follow, in this browser. Times come from your browser\'s own timezone; '
-  +   'nothing about you is sent anywhere.'
-  + '</div>'
-  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Caveats</h4>'
-  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
-  +   'Later fixtures are provisional — broadcasters move matches about five weeks out, so subscribe '
-  +   'to the calendar rather than downloading it once. Full match highlights are rights-restricted; '
-  +   'the video shown is ESPN\'s own. Odds are informational, not betting advice. '
-  +   'Not affiliated with the Premier League, any club, ESPN or Kalshi.'
-  + '</div>'
-  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6;margin-top:16px">'
-  +   'Open source under the MIT licence.</div>'
-  + '<a class="gh" href="https://github.com/danpune/epl-tracker">Source on GitHub</a>'
-  + '</div>';
-}
-
 /* ---------- shell ---------- */
 function render(){
   renderHero();
