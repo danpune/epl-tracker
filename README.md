@@ -1,4 +1,6 @@
-# Premier League Tracker
+# Premier League Tracker ⚽
+
+**Live site: https://danpune.github.io/epl-tracker/**
 
 The table, the full 380-match season, and every kickoff converted to **your** timezone.
 Static site, no build step, no API key, no database. Runs on GitHub Pages for $0.
