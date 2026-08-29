@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Premier League Tracker — Table, Fixtures & Your Kickoff Times</title>
+<meta name="description" content="The Premier League table, the full 380-match season schedule, and every kickoff converted to your own timezone. Pick your club. No ads, no tracking, no sign-in.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233d195b'/><circle cx='50' cy='50' r='27' fill='white'/><path d='M50 30 L59 37 L56 48 L44 48 L41 37 Z' fill='%233d195b'/><path d='M50 23v7M31 44l10 -7M69 44l-10 -7M38 68l6 -20M62 68l-6 -20' stroke='%233d195b' stroke-width='4' fill='none'/></svg>">
+<meta name="theme-color" content="#3d195b">
+<link rel="preload" href="data.json" as="fetch" crossorigin>
+<style>
+:root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 60px}
+header{padding:26px 0 16px;border-bottom:2px solid var(--acc)}
+.kicker{font-size:12px;letter-spacing:.22em;color:var(--acc);text-transform:uppercase;font-weight:700}
+h1{margin:6px 0 4px;font-size:30px;font-weight:900;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13.5px}
+/* team picker */
+.picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:12px 14px}
+.picker label{font-size:13px;color:var(--muted)}
+.picker select{background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--text);font-size:15px;font-weight:700;padding:7px 10px}
+.picker .tz{font-size:12.5px;color:var(--muted);margin-left:auto}
+/* tabs */
+nav{display:flex;gap:6px;margin:18px 0 16px;flex-wrap:wrap}
+nav button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 16px;font-size:13.5px;cursor:pointer}
+nav button.on{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+/* table */
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:10px 6px;font-weight:700;border-bottom:1px solid var(--line)}
+th:nth-child(2){text-align:left}
+td{padding:9px 6px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line)}
+td:nth-child(2){text-align:left}
+tr:last-child td{border-bottom:0}
+tr.me td{background:#f3ecfa;font-weight:700}
+tr.me td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+.cl td:first-child{box-shadow:inset 3px 0 0 var(--good)}
+.rel td:first-child{box-shadow:inset 3px 0 0 var(--live)}
+tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+.tm{display:flex;align-items:center;gap:8px;min-width:0}
+.tm img{width:22px;height:22px;flex:0 0 auto}
+.tm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pts{font-weight:800}
+.key{font-size:12px;color:var(--muted);margin-top:10px;display:flex;gap:16px;flex-wrap:wrap}
+.key i{font-style:normal;display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+/* fixtures */
+.day{margin:22px 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);border-bottom:1px solid var(--line);padding-bottom:4px;font-weight:700}
+.m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px}
+.m.me{border-left:3px solid var(--acc)}
+.m.live{border-left:3px solid var(--live)}
+.m .side{flex:1;display:flex;align-items:center;gap:7px;min-width:0;font-size:14.5px}
+.m .side.a{justify-content:flex-end;text-align:right}
+.m .side img{width:20px;height:20px;flex:0 0 auto}
+.m .side span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m .sc{font-weight:800;font-variant-numeric:tabular-nums;font-size:15px;min-width:52px;text-align:center}
+.m .tm2{color:var(--muted);font-size:12.5px;min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
+.m .w{font-weight:800}
+.m .clock{color:var(--live);font-size:11px;font-weight:700}
+.more{display:block;width:100%;margin:14px 0;padding:11px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--acc);font-size:14px;font-weight:700;cursor:pointer}
+/* kickoff times */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.c .n{font-size:30px;font-weight:900;line-height:1.1;color:var(--acc);font-variant-numeric:tabular-nums}
+.c .l{font-size:12.5px;color:var(--muted);margin-top:3px}
+.bars{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.bar{display:flex;align-items:center;gap:10px;padding:2.5px 0;font-size:13px}
+.bar .h{width:76px;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
+.bar .t{flex:1;background:var(--bg);border-radius:4px;overflow:hidden;height:17px}
+.bar .f{height:100%;background:var(--acc);border-radius:4px;min-width:2px}
+.bar .f.dim{background:#c3b6d2}
+.bar .v{width:26px;text-align:right;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.55}
+footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+footer a{color:var(--acc)}
+.err{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--live);border-radius:10px;padding:14px}
+@media(max-width:560px){
+  h1{font-size:24px}
+  .hide-s{display:none}
+  .m .side span{font-size:13px}
+  .picker .tz{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="kicker">English Premier League</div>
+  <h1>Premier League Tracker</h1>
+  <div class="sub" id="sub">Loading…</div>
+</header>
+
+<div class="picker">
+  <label for="team">My club</label>
+  <select id="team"></select>
+  <span class="tz" id="tz"></span>
+</div>
+
+<nav>
+  <button data-t="table" class="on">Table</button>
+  <button data-t="fix">Fixtures</button>
+  <button data-t="tz">My Kickoff Times</button>
+</nav>
+
+<main id="view"><p class="sub">Loading…</p></main>
+
+<footer>
+  Schedule from <a href="https://github.com/openfootball/football.json">openfootball</a> (CC0).
+  Table &amp; results from ESPN's public feed. Times shown in your browser's timezone.
+  <span id="upd"></span>
+</footer>
+</div>
+
+<script>
+var D = null, TEAM = localStorage.getItem('epl.team') || 'manchesterunited', TAB = 'table', showAll = false;
+var TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'your timezone';
+var view = document.getElementById('view');
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function team(k){ return D.teams[k] || {name:k, short:k, abbr:'', logo:''}; }
+function crest(k){ var t = team(k); return t.logo ? '<img src="'+esc(t.logo)+'" alt="" loading="lazy" width="22" height="22">' : ''; }
+function dt(m){ return new Date(m.utc.replace('Z',':00Z')); }
+
+var fDay = new Intl.DateTimeFormat([], {weekday:'long', month:'short', day:'numeric'});
+var fTime = new Intl.DateTimeFormat([], {hour:'numeric', minute:'2-digit'});
+
+/* ---------- table ---------- */
+function renderTable(){
+  var rows = D.table.map(function(r){
+    var t = team(r.t), cls = [];
+    if (r.t === TEAM) cls.push('me');
+    if (r.rank <= 4) cls.push('cl'); else if (r.rank >= 18) cls.push('rel');
+    return '<tr class="'+cls.join(' ')+'">'
+      + '<td>'+r.rank+'</td>'
+      + '<td><div class="tm">'+crest(r.t)+'<span>'+esc(t.short)+'</span></div></td>'
+      + '<td>'+r.pld+'</td>'
+      + '<td class="hide-s">'+r.w+'</td><td class="hide-s">'+r.d+'</td><td class="hide-s">'+r.l+'</td>'
+      + '<td class="hide-s">'+r.gf+'</td><td class="hide-s">'+r.ga+'</td>'
+      + '<td>'+(r.gd > 0 ? '+' : '')+r.gd+'</td>'
+      + '<td class="pts">'+r.pts+'</td></tr>';
+  }).join('');
+  view.innerHTML = '<table><thead><tr><th>#</th><th>Club</th><th>Pl</th>'
+    + '<th class="hide-s">W</th><th class="hide-s">D</th><th class="hide-s">L</th>'
+    + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th>Pts</th></tr></thead>'
+    + '<tbody>'+rows+'</tbody></table>'
+    + '<div class="key"><span><i style="background:#137a4a"></i>Champions League</span>'
+    + '<span><i style="background:#c0392b"></i>Relegation</span></div>';
+}
+
+/* ---------- fixtures ---------- */
+function renderFixtures(){
+  var all = showAll ? D.matches : D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
+  var now = Date.now(), html = '', lastDay = '';
+
+  // Land the user on the next match, not on August.
+  var nextIdx = all.findIndex(function(m){ return !m.done && dt(m).getTime() > now - 7200000; });
+  if (nextIdx < 0) nextIdx = all.length;
+  var start = Math.max(0, nextIdx - 3);
+
+  all.slice(start).forEach(function(m){
+    var d = dt(m), day = fDay.format(d);
+    if (day !== lastDay){ html += '<div class="day">'+esc(day)+'</div>'; lastDay = day; }
+    var mine = (m.h === TEAM || m.a === TEAM);
+    var hw = m.done && m.hs > m.as, aw = m.done && m.as > m.hs;
+    var mid = m.live ? '<div class="sc">'+m.hs+'–'+m['as']+'<div class="clock">'+esc(m.clock||'LIVE')+'</div></div>'
+            : m.done ? '<div class="sc">'+m.hs+'–'+m['as']+'</div>'
+            : '<div class="tm2">'+fTime.format(d)+'</div>';
+    html += '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'">'
+      + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
+      + mid
+      + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div>'
+      + '</div>';
+  });
+
+  view.innerHTML = '<button class="more" id="tog">'
+      + (showAll ? 'Showing all 20 clubs — show only ' + esc(team(TEAM).short) : 'Showing ' + esc(team(TEAM).short) + ' only — show all clubs')
+      + '</button>'
+      + (start > 0 ? '<button class="more" id="back">↑ Show earlier matches</button>' : '')
+      + (html || '<p class="sub">No matches.</p>');
+  document.getElementById('tog').onclick = function(){ showAll = !showAll; renderFixtures(); };
+  var b = document.getElementById('back');
+  if (b) b.onclick = function(){ renderFixtures0(all); };
+}
+function renderFixtures0(all){  // full season, no trimming
+  var html = '', lastDay = '';
+  all.forEach(function(m){
+    var d = dt(m), day = fDay.format(d);
+    if (day !== lastDay){ html += '<div class="day">'+esc(day)+'</div>'; lastDay = day; }
+    var mine = (m.h === TEAM || m.a === TEAM);
+    var hw = m.done && m.hs > m.as, aw = m.done && m.as > m.hs;
+    var mid = m.done ? '<div class="sc">'+m.hs+'–'+m['as']+'</div>' : '<div class="tm2">'+fTime.format(d)+'</div>';
+    html += '<div class="m'+(mine?' me':'')+'">'
+      + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
+      + mid
+      + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div></div>';
+  });
+  view.innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+/* ---------- kickoff times ---------- */
+function renderTZ(){
+  var mine = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
+  var hours = new Array(24).fill(0), easy = 0, work = 0, alarm = 0;
+
+  // Three buckets, mutually exclusive, so they sum to the full 38.
+  mine.forEach(function(m){
+    var d = dt(m), h = d.getHours(), wd = d.getDay();
+    hours[h]++;
+    var weekday = (wd >= 1 && wd <= 5);
+    if (h < 8) alarm++;
+    else if (weekday && h < 17) work++;
+    else easy++;
+  });
+
+  var max = Math.max.apply(null, hours) || 1;
+  var bars = hours.map(function(n, h){
+    if (!n) return '';
+    var lab = fTime.format(new Date(2026, 0, 1, h, 0));
+    return '<div class="bar"><div class="h">'+esc(lab)+'</div>'
+      + '<div class="t"><div class="f'+(n === max ? '' : ' dim')+'" style="width:'+Math.round(n/max*100)+'%"></div></div>'
+      + '<div class="v">'+n+'</div></div>';
+  }).join('');
+
+  var t = team(TEAM);
+  view.innerHTML =
+      '<div class="cards">'
+    + '<div class="c"><div class="n">'+easy+'<span style="font-size:17px;color:var(--muted)">/'+mine.length+'</span></div>'
+    +   '<div class="l">easy — weekend, or a weeknight after 5pm</div></div>'
+    + '<div class="c"><div class="n">'+work+'</div><div class="l">clash with your work day (Mon–Fri, 8–5)</div></div>'
+    + '<div class="c"><div class="n">'+alarm+'</div><div class="l">before 8am — set an alarm</div></div>'
+    + '</div>'
+    + '<div class="bars"><div class="l" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:9px">'
+    +   esc(t.short)+' kickoffs by your local time</div>'+bars+'</div>'
+    + '<p class="note">All '+mine.length+" of "+esc(t.name)+"'s league matches, converted from UK time to <b>"+esc(TZ)+'</b>. '
+    + 'The three counts above add up to '+mine.length+' — every match lands in exactly one. '
+    + 'UK clocks change on 25 Oct and 28 Mar, so the same 3pm kickoff shifts by an hour for you twice this season; that is already handled here.<br><br>'
+    + '<b>Later fixtures are provisional.</b> Broadcasters move matches for TV, usually about five weeks ahead. '
+    + 'This page refreshes from the source a few times a day, so those moves flow through as they are announced.</p>';
+}
+
+/* ---------- shell ---------- */
+function render(){
+  if (TAB === 'table') renderTable();
+  else if (TAB === 'fix') renderFixtures();
+  else renderTZ();
+}
+
+document.querySelectorAll('nav button').forEach(function(b){
+  b.onclick = function(){
+    document.querySelectorAll('nav button').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on'); TAB = b.dataset.t; render();
+  };
+});
+
+fetch('data.json').then(function(r){ return r.json(); }).then(function(d){
+  D = d;
+  var sel = document.getElementById('team');
+  if (!D.teams[TEAM]) TEAM = D.table[0].t;
+  sel.innerHTML = D.table.slice().sort(function(a,b){
+      return team(a.t).name.localeCompare(team(b.t).name); })
+    .map(function(r){ return '<option value="'+r.t+'"'+(r.t===TEAM?' selected':'')+'>'+esc(team(r.t).name)+'</option>'; }).join('');
+  sel.onchange = function(){ TEAM = sel.value; localStorage.setItem('epl.team', TEAM); showAll = false; render(); };
+
+  var played = D.matches.filter(function(m){ return m.done; }).length;
+  document.getElementById('sub').textContent = D.season + ' season · ' + played + ' of ' + D.matches.length + ' matches played';
+  document.getElementById('tz').textContent = 'Times in ' + TZ;
+  document.getElementById('upd').textContent = 'Updated ' + new Date(D.updated).toLocaleString();
+  render();
+}).catch(function(e){
+  view.innerHTML = '<div class="err"><b>Could not load the data.</b><br>'+esc(e.message)+'</div>';
+});
+</script>
+</body>
+</html>
