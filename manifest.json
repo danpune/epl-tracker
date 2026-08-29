@@ -1,0 +1,13 @@
+{
+  "name": "Premier League Tracker",
+  "short_name": "PL Tracker",
+  "description": "The Premier League table, the full season, and every kickoff in your own timezone.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f4f8",
+  "theme_color": "#3d195b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

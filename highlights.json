@@ -1,0 +1,55 @@
+{
+ "_howto": "match key (ESPN event id) -> official Premier League YouTube video. Every entry verified via oEmbed author_url. Merge-only.",
+ "channel": "https://www.youtube.com/@premierleague",
+ "highlights": {
+  "401879322": {
+   "yt": "sYJHI6ClWO4",
+   "t": "How Hull City Outplayed Man United"
+  },
+  "401879301": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879299": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879298": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879300": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879321": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879320": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879297": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879319": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  },
+  "401879318": {
+   "yt": "SxiMucn6hTc",
+   "t": "ALL The Goals From Opening Weekend | Matchweek 1 | 2026/27 Premier League Highlights",
+   "round": true
+  }
+ }
+}

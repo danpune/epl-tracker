@@ -35,6 +35,12 @@ out; the fetch runs every 30 minutes, so reschedules flow through as they are an
   a Google Calendar link. Built in the browser; there is no backend.
 - **Odds** — Kalshi's market-implied win/draw/win where a market is quoted.
 - **Comments** — GitHub Discussions via giscus, loaded only when that tab is opened.
+- **Highlights** — official Premier League YouTube uploads, each verified through
+  oEmbed against the channel URL (not the channel *name*: a spoofed name burned the
+  sibling World Cup project). Clips stamped with a previous season are rejected, and
+  anything unmatched falls back to a YouTube search.
+- **Head to head** — 16 seasons of meetings between the two clubs, on every match.
+- **Dark mode**, and installable to a phone home screen (web manifest).
 - **Top scorers**, built match by match from key events (ESPN's leaders endpoint is
   empty for soccer), league and cup goals counted separately.
 - **Where to watch** — the US broadcaster per fixture, straight from ESPN.
@@ -59,7 +65,9 @@ carries no Premier League markets at all.
 ## Files
 
     fetch_data.py     both feeds -> data.json + ics/*.ics   (stdlib only)
-    build_scorers.py  goalscorers, accumulated match by match (merge-only)
+    build_scorers.py    goalscorers, accumulated match by match (merge-only)
+    build_highlights.py official YouTube clips, oEmbed-verified (merge-only)
+    build_history.py    16 seasons of head-to-head; rerun only when a season starts
     test_fetch.py   self-check: DST + name matching + data integrity
     index.html      the whole UI, one file, no framework
     data.json       generated, ~50KB

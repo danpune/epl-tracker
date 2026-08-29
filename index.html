@@ -7,10 +7,23 @@
 <meta name="description" content="The Premier League table, the full 380-match season schedule, and every kickoff converted to your own timezone. Pick your club. No ads, no tracking, no sign-in.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233d195b'/><circle cx='50' cy='50' r='27' fill='white'/><path d='M50 30 L59 37 L56 48 L44 48 L41 37 Z' fill='%233d195b'/><path d='M50 23v7M31 44l10 -7M69 44l-10 -7M38 68l6 -20M62 68l-6 -20' stroke='%233d195b' stroke-width='4' fill='none'/></svg>">
 <meta name="theme-color" content="#3d195b">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PL Tracker">
 <link rel="preload" href="data.json" as="fetch" crossorigin>
 <style>
 :root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e;
   --club:#3d195b;--club2:#1d1526}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#141019;--card:#1e1826;--line:#312a3b;--text:#efeaf4;--muted:#a79fb2;--live:#ff6b52;--good:#3fbc80}
+  tr.me td{background:color-mix(in srgb,var(--club) 26%,#1e1826)}
+  .m:hover,.hlc:hover,.vcard:hover{border-color:var(--club)}
+  .sbar .t{background:#2a2333}
+  .bar .t{background:#2a2333}
+  .formpill .fd{background:#6b6377}
+  img[src*="teamlogos"]{filter:none}
+}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .wrap{max-width:900px;margin:0 auto;padding:0 16px 60px}
@@ -103,7 +116,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .m{cursor:pointer}
 .m .go{color:var(--muted);font-size:11px;flex:0 0 auto;width:12px;text-align:center}
 .cal{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;color:var(--text);text-decoration:none;background:var(--card);cursor:pointer;margin:0 6px 8px 0}
-.cal:hover{border-color:var(--acc);color:var(--acc)}
+.cal:hover{border-color:var(--club);color:var(--text)}
 .detail{background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;padding:12px 14px;margin:-7px 0 8px}
 .detail h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .xi{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -118,7 +131,33 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .sbar .rv{text-align:right}
 .sbar .nm{width:112px;color:var(--muted);text-align:center;flex:0 0 auto;font-size:11px}
 .sbar .t{flex:1;display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--bg)}
-.sbar .t i{display:block}.sbar .t .l{background:var(--acc)}.sbar .t .r{background:#c3b6d2}
+.sbar .t i{display:block}.sbar .t .l{background:var(--club)}.sbar .t .r{background:#9b93a6}
+.hlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.hlc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px;cursor:pointer;text-align:left}
+.hlc:hover{border-color:var(--club)}
+.hlthumb{position:relative;border-radius:8px;overflow:hidden;background:#ddd8e2}
+.hlthumb img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.hlplay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,10,26,.28);color:#fff;font-size:26px;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.hlc .hls{font-size:13.5px;font-weight:800;margin-top:8px;display:flex;align-items:center;gap:6px}
+.hlc .hls img{width:17px;height:17px}
+.hlc .hlt{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.hlc .rnd{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px}
+.hlday{grid-column:1/-1;margin:6px 0 -4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--club);font-weight:700}
+.ovl{position:fixed;inset:0;background:rgba(14,8,18,.88);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.ovl .box{width:min(900px,96vw)}
+.ovl .bh{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;font-size:15px;margin-bottom:9px;gap:12px}
+.ovl .bh button{background:none;border:0;color:#fff;font-size:26px;cursor:pointer;line-height:1;padding:0 4px}
+.ovl .fr{aspect-ratio:16/9;width:100%}
+.ovl iframe{width:100%;height:100%;border:0;border-radius:12px;background:#000}
+.playbtn{border:0;background:none;color:var(--club);font-size:15px;cursor:pointer;padding:2px 4px;flex:0 0 auto}
+.h2h{display:flex;gap:2px;height:22px;border-radius:6px;overflow:hidden;margin:2px 0 8px;font-size:10.5px;font-weight:800}
+.h2h div{display:flex;align-items:center;justify-content:center;color:#fff;min-width:0;white-space:nowrap;overflow:hidden}
+.h2h .a{background:var(--club)}.h2h .d{background:#9b93a6}.h2h .b{background:#6b6377}
+.h2hl{font-size:12px;color:var(--muted);margin-bottom:8px}
+.h2hm{font-size:12.5px;padding:3px 0;border-top:1px solid var(--line);display:flex;gap:8px}
+.h2hm .ss{color:var(--muted);width:52px;flex:0 0 auto;font-variant-numeric:tabular-nums}
 .vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:4px}
 .vcard{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px;cursor:pointer;text-align:left;overflow:hidden}
 .vcard:hover{border-color:var(--club)}
@@ -132,7 +171,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .formpill i{width:15px;height:15px;border-radius:3px;font-style:normal;font-size:9.5px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center}
 .formpill .fw{background:#137a4a}.formpill .fd{background:#9b93a6}.formpill .fl{background:#c0392b}
 .tv{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:2px 6px;flex:0 0 auto;white-space:nowrap}
-.cbadge{font-size:9.5px;letter-spacing:.07em;font-weight:800;text-transform:uppercase;border-radius:4px;padding:2px 5px;background:#ece4f4;color:var(--acc);flex:0 0 auto}
+.cbadge{font-size:9.5px;letter-spacing:.07em;font-weight:800;text-transform:uppercase;border-radius:4px;padding:2px 5px;background:var(--bg);border:1px solid var(--line);color:var(--muted);flex:0 0 auto}
 .cbadge.ucl{background:#e0e9f7;color:#1a4a8a}.cbadge.fa{background:#fbe8e4;color:#a8341c}.cbadge.efl{background:#e6f0e8;color:#1c6b45}
 .odds{display:flex;gap:1px;margin:0 0 7px;border-radius:0 0 9px 9px;overflow:hidden;height:20px;font-size:10px;font-weight:700}
 .odds div{display:flex;align-items:center;justify-content:center;color:#fff;min-width:0;overflow:hidden;white-space:nowrap}
@@ -141,7 +180,8 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .owrap .m{margin-bottom:0;border-radius:10px 10px 0 0}
 .olab{font-size:11px;color:var(--muted);margin:-2px 0 9px;padding-left:2px}
 .olab a{color:var(--muted)}
-.more{display:block;width:100%;margin:14px 0;padding:11px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--acc);font-size:14px;font-weight:700;cursor:pointer}
+.more{display:block;width:100%;margin:14px 0;padding:11px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer}
+.more:hover{border-color:var(--club)}
 /* kickoff times */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
 .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
@@ -156,9 +196,10 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .bar .v{width:26px;text-align:right;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
 .note{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.55}
 footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
-footer a{color:var(--acc)}
+footer a{color:var(--club)}
+@media (prefers-color-scheme: dark){footer a,.saybox a{color:#c9a6ff}}
 .saybox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
-.saybox .gh{display:inline-block;margin-top:10px;background:var(--acc);color:#fff;text-decoration:none;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700}
+.saybox .gh{display:inline-block;margin-top:10px;background:var(--club);color:#fff;text-decoration:none;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700}
 .saybox .fine{font-size:12.5px;color:var(--muted);margin-top:12px}
 .err{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--live);border-radius:10px;padding:14px}
 @media(max-width:560px){
@@ -189,7 +230,7 @@ footer a{color:var(--acc)}
   <button data-t="table" class="on">Table</button>
   <button data-t="fix">Fixtures</button>
   <button data-t="tz">My Kickoff Times</button>
-  <button data-t="say">Comments</button>
+  <button data-t="hl">Highlights</button>
   <button data-t="about">About</button>
 </nav>
 
@@ -203,7 +244,7 @@ footer a{color:var(--acc)}
 </div>
 
 <script>
-var D = null, SCORERS = null, TEAM = localStorage.getItem('epl.team') || 'manchesterunited', TAB = 'table', showAll = false, showPast = false;
+var D = null, SCORERS = null, HL = null, HIST = null, TEAM = localStorage.getItem('epl.team') || 'manchesterunited', TAB = 'table', showAll = false, showPast = false;
 var TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'your timezone';
 var view = document.getElementById('view');
 
@@ -330,6 +371,41 @@ function gcalLink(m){
     + '&details=' + encodeURIComponent(m.c === 'PL' ? 'Premier League matchday ' + m.md : (COMP[m.c]||m.c));
 }
 
+/* ---------- head-to-head, from 16 seasons of openfootball ---------- */
+// 78KB, and only ever wanted once a match is opened — so it is fetched on first use,
+// never on page load.
+var histWanted = false;
+function loadHistory(then){
+  if (HIST){ then(); return; }
+  if (histWanted) return;
+  histWanted = true;
+  fetch('history.json').then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ HIST = j || {pairs:{}}; then(); })
+    .catch(function(){ HIST = {pairs:{}}; then(); });
+}
+
+function h2hBlock(m){
+  if (!HIST) return '<h4>Head to head</h4><p class="note" style="margin:0">Loading\u2026</p>';
+  var rec = (HIST.pairs || {})[[m.h, m.a].sort().join('|')];
+  if (!rec || !rec.n) return '';
+  var hw = (rec.w || {})[m.h] || 0, aw = (rec.w || {})[m.a] || 0, dr = rec.d || 0;
+  var tot = hw + aw + dr || 1;
+  var pct = function(x){ return Math.round(x / tot * 100); };
+  var rows = (rec.last || []).slice().reverse().map(function(x){
+    return '<div class="h2hm"><span class="ss">'+esc(x.s)+'</span>'
+         + '<span>'+esc(team(x.h).short)+' <b>'+x.hs+'\u2013'+x['as']+'</b> '+esc(team(x.a).short)+'</span></div>';
+  }).join('');
+  return '<h4>Head to head \u00b7 last '+HIST.seasons+' seasons</h4>'
+    + '<div class="h2h">'
+    +   '<div class="a" style="width:'+pct(hw)+'%">'+(pct(hw) >= 14 ? hw+' W' : '')+'</div>'
+    +   '<div class="d" style="width:'+pct(dr)+'%">'+(pct(dr) >= 14 ? dr+' D' : '')+'</div>'
+    +   '<div class="b" style="width:'+pct(aw)+'%">'+(pct(aw) >= 14 ? aw+' W' : '')+'</div>'
+    + '</div>'
+    + '<div class="h2hl">'+esc(team(m.h).short)+' '+hw+' \u00b7 '+dr+' draws \u00b7 '
+    +   aw+' '+esc(team(m.a).short)+' \u2014 '+rec.n+' league meetings since '+esc(HIST.from)+'</div>'
+    + rows;
+}
+
 /* ---------- match detail: lineups, stats, key events (fetched on click) ---------- */
 var detailCache = {};
 function statBar(name, l, r){
@@ -352,6 +428,8 @@ function renderDetail(m, box){
   // calendar row — always available, even before a lineup exists
   html += '<a class="cal" id="ics-'+m.e+'">＋ Add to calendar (.ics)</a>'
         + '<a class="cal" href="'+esc(gcalLink(m))+'" target="_blank" rel="noopener noreferrer">＋ Google Calendar</a>';
+
+  html += h2hBlock(m);
 
   var rs = d.rosters || [];
   if (rs.length === 2 && (rs[0].roster || []).length){
@@ -448,6 +526,7 @@ function renderDetail(m, box){
 
 function openDetail(m, box){
   if (!m.e){ box.innerHTML = '<div class="detail">No match detail available for this fixture yet.</div>'; return; }
+  loadHistory(function(){ if (box.parentNode) renderDetail(m, box); });
   renderDetail(m, box);
   if (detailCache[m.e]) return;
   var path = (D.paths || {})[m.c || 'PL'] || 'eng.1';
@@ -472,6 +551,8 @@ function matchRow(m){
     + mid
     + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+badge+'</div>'
     + (m.tv ? '<div class="tv" title="US broadcast">'+esc(m.tv.join(' / '))+'</div>' : '')
+    + (m.done ? '<button class="playbtn" data-play="'+m._i+'" title="'
+        +(hlFor(m) ? 'Play official video' : 'Search YouTube for highlights')+'">\u25b6</button>' : '')
     + '<div class="go">\u203a</div>'
     + '</div>';
 
@@ -530,6 +611,8 @@ function renderFixtures(){
   };
 
   view.onclick = function(ev){
+    var pb = ev.target.closest ? ev.target.closest('[data-play]') : null;
+    if (pb){ ev.stopPropagation(); playHL(D.matches[+pb.dataset.play]); return; }
     var row = ev.target.closest ? ev.target.closest('.m') : null;
     if (!row || !view.contains(row)) return;
     var m = D.matches[+row.dataset.i];
@@ -591,49 +674,6 @@ function renderTZ(){
     + 'UK clocks change on 25 Oct and 28 Mar, so the same 3pm kickoff shifts by an hour for you twice this season; that is already handled here.<br><br>'
     + '<b>Later fixtures are provisional.</b> Broadcasters move matches for TV, usually about five weeks ahead. '
     + 'This page refreshes from the source a few times a day, so those moves flow through as they are announced.</p>';
-}
-
-/* ---------- comments ---------- */
-// Loaded only when the tab is opened, so the third-party script never touches
-// first paint. Falls back to a plain Discussions link if giscus does not appear.
-var sayLoaded = false;
-function renderSay(){
-  view.innerHTML =
-      '<div class="saybox" id="saybox">'
-    + '<div id="giscus-slot"></div>'
-    + '<div id="sayfall"><b>Comments load from GitHub Discussions.</b>'
-    +   '<div class="fine">If nothing appears below, the giscus app has not been installed on the repo yet '
-    +   '— the button still works.</div>'
-    +   '<a class="gh" href="https://github.com/danpune/epl-tracker/discussions/new?category=general" '
-    +   'target="_blank" rel="noopener noreferrer">Leave a comment on GitHub</a></div>'
-    + '<div class="fine">Comments are hosted on GitHub Discussions and need a GitHub account. '
-    +   'Opening this tab contacts giscus.app and github.com; the other tabs contact nobody.</div>'
-    + '</div>';
-
-  if (sayLoaded) return;
-  sayLoaded = true;
-  var sc = document.createElement('script');
-  sc.src = 'https://giscus.app/client.js';
-  sc.async = true; sc.crossOrigin = 'anonymous';
-  var attrs = {
-    'data-repo': 'danpune/epl-tracker',
-    'data-repo-id': 'R_kgDOUHqqvw',
-    'data-category': 'General',
-    'data-category-id': 'DIC_kwDOUHqqv84DEa9M',
-    'data-mapping': 'pathname',
-    'data-strict': '0',
-    'data-reactions-enabled': '1',
-    'data-emit-metadata': '0',
-    'data-input-position': 'top',
-    'data-theme': 'light',
-    'data-lang': 'en'
-  };
-  Object.keys(attrs).forEach(function(k){ sc.setAttribute(k, attrs[k]); });
-  document.getElementById('giscus-slot').appendChild(sc);
-  setTimeout(function(){
-    var f = document.getElementById('sayfall');
-    if (f && document.querySelector('iframe.giscus-frame')) f.style.display = 'none';
-  }, 4000);
 }
 
 /* ---------- hero: the next match, counting down ---------- */
@@ -738,12 +778,105 @@ function renderAbout(){
   + '</div>';
 }
 
+/* ---------- highlights: official Premier League uploads, oEmbed-verified ---------- */
+function hlKey(m){ return m.e || (m.h + m.a + m.utc); }
+function hlFor(m){ return HL && HL[hlKey(m)]; }
+
+function playHL(m){
+  var h = hlFor(m);
+  var title = team(m.h).short + ' ' + (m.done ? m.hs + '\u2013' + m['as'] : 'v') + ' ' + team(m.a).short;
+  if (!h){
+    window.open('https://www.youtube.com/results?search_query='
+      + encodeURIComponent('Premier League ' + team(m.h).name + ' v ' + team(m.a).name + ' highlights'),
+      '_blank', 'noopener');
+    return;
+  }
+  var ov = document.createElement('div');
+  ov.className = 'ovl';
+  ov.innerHTML = '<div class="box"><div class="bh"><span>\ud83c\udfac '+esc(title)+'</span>'
+    + '<button aria-label="Close">\u00d7</button></div>'
+    + '<div class="fr"><iframe src="https://www.youtube-nocookie.com/embed/'+esc(h.yt)
+    + '?autoplay=1&amp;rel=0" title="Match video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div></div>';
+  function close(){ if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', esckey); }
+  function esckey(e){ if (e.key === 'Escape') close(); }
+  ov.onclick = function(e){ if (e.target === ov || e.target.tagName === 'BUTTON') close(); };
+  document.addEventListener('keydown', esckey);
+  document.body.appendChild(ov);
+}
+
+function renderHighlights(){
+  if (!HL){
+    view.innerHTML = '<p class="sub">Loading highlights\u2026</p>';
+    return;
+  }
+  var done = D.matches.filter(function(m){ return m.done && hlFor(m); })
+                      .sort(function(a, b){ return a.utc < b.utc ? 1 : -1; });
+  if (!done.length){
+    view.innerHTML = '<div class="saybox"><b>No official video yet.</b>'
+      + '<div class="fine">Clips appear here as the Premier League posts them after each match. '
+      + 'In the meantime, any finished match has a \u25b6 that opens a YouTube search.</div></div>';
+    return;
+  }
+  var html = '', lastDay = '';
+  done.forEach(function(m){
+    var h = hlFor(m), day = fDay.format(dt(m));
+    if (day !== lastDay){ html += '<div class="hlday">'+esc(day)+'</div>'; lastDay = day; }
+    html += '<div class="hlc" data-i="'+m._i+'">'
+      + '<div class="hlthumb"><img loading="lazy" src="https://i.ytimg.com/vi/'+esc(h.yt)+'/hqdefault.jpg" alt="">'
+      +   '<span class="hlplay">\u25b6</span></div>'
+      + '<div class="hls">'+crest(m.h)+'<span>'+esc(team(m.h).short)+' '+m.hs+'\u2013'+m['as']+' '
+      +   esc(team(m.a).short)+'</span></div>'
+      + '<div class="hlt">'+esc(h.t)+(h.round ? '<span class="rnd">round-up</span>' : '')+'</div>'
+      + '</div>';
+  });
+  view.innerHTML = '<div class="hlgrid">'+html+'</div>'
+    + '<p class="note">Official uploads from the Premier League\u2019s own YouTube channel, each one '
+    + 'verified against the channel before it is shown. The league does not post full match-highlight '
+    + 'reels worldwide, so some matches show the matchweek round-up instead. Playing a clip contacts '
+    + 'YouTube (no-cookie domain); nothing else on this page does.</p>';
+  view.onclick = function(ev){
+    var c = ev.target.closest ? ev.target.closest('.hlc') : null;
+    if (c) playHL(D.matches[+c.dataset.i]);
+  };
+}
+
+/* ---------- about ---------- */
+function renderAbout(){
+  view.innerHTML = '<div class="saybox">'
+  + '<h4 style="margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Where the data comes from</h4>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
+  +   '<b>Schedule</b> — <a href="https://github.com/openfootball/football.json">openfootball/football.json</a> (CC0). '
+  +   'The full 380-match season, published months ahead.<br>'
+  +   '<b>Table, results, lineups, match stats, video, US broadcasters</b> — ESPN\'s public feed. '
+  +   'Lineups and video load only when you tap a match.<br>'
+  +   '<b>Highlights</b> — the Premier League\'s own YouTube channel. Every clip is verified '
+  +   'through YouTube\'s oEmbed endpoint against the official channel URL before it is shown, '
+  +   'and clips stamped with a previous season are rejected.<br>'
+  +   '<b>Odds</b> — <a href="https://kalshi.com">Kalshi</a>\'s KXEPLGAME markets, shown only where a market is actually quoted.<br>'
+  + '</div>'
+  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Privacy</h4>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
+  +   'No accounts, no tracking, no analytics, no cookies. The only thing stored on your device '
+  +   'is which club you follow, in this browser. Times come from your browser\'s own timezone; '
+  +   'nothing about you is sent anywhere.'
+  + '</div>'
+  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Caveats</h4>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
+  +   'Later fixtures are provisional — broadcasters move matches about five weeks out, so subscribe '
+  +   'to the calendar rather than downloading it once. Full match highlights are rights-restricted; '
+  +   'the video shown is ESPN\'s own. Odds are informational, not betting advice. '
+  +   'Not affiliated with the Premier League, any club, ESPN or Kalshi.'
+  + '</div>'
+  + '<a class="gh" href="https://github.com/danpune/epl-tracker">Source on GitHub</a>'
+  + '</div>';
+}
+
 /* ---------- shell ---------- */
 function render(){
   renderHero();
   if (TAB === 'table') renderTable();
   else if (TAB === 'fix') renderFixtures();
-  else if (TAB === 'say') renderSay();
+  else if (TAB === 'hl') renderHighlights();
   else if (TAB === 'about') renderAbout();
   else renderTZ();
 }
@@ -754,6 +887,10 @@ document.querySelectorAll('nav button').forEach(function(b){
     b.classList.add('on'); TAB = b.dataset.t; render();
   };
 });
+
+fetch('highlights.json').then(function(r){ return r.ok ? r.json() : null; })
+  .then(function(j){ HL = (j && j.highlights) || {}; if (D) render(); })
+  .catch(function(){ HL = {}; });
 
 fetch('scorers.json').then(function(r){ return r.ok ? r.json() : null; })
   .then(function(s){ SCORERS = s; if (D && TAB === 'table') render(); })
