@@ -26,6 +26,9 @@ jobs:
       - name: Fetch (openfootball schedule + ESPN table/results)
         run: python fetch_data.py
 
+      - name: Build goalscorers (incremental, merge-only)
+        run: python build_scorers.py || true
+
       - name: Self-check
         run: python test_fetch.py
 
@@ -33,6 +36,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data.json
+          git add data.json scorers.json ics/
           git diff --staged --quiet || git commit -m "auto-update data $(date -u +%Y-%m-%dT%H:%MZ)"
           git push

@@ -35,6 +35,11 @@ out; the fetch runs every 30 minutes, so reschedules flow through as they are an
   a Google Calendar link. Built in the browser; there is no backend.
 - **Odds** — Kalshi's market-implied win/draw/win where a market is quoted.
 - **Comments** — GitHub Discussions via giscus, loaded only when that tab is opened.
+- **Top scorers**, built match by match from key events (ESPN's leaders endpoint is
+  empty for soccer), league and cup goals counted separately.
+- **Where to watch** — the US broadcaster per fixture, straight from ESPN.
+- **Subscribable calendars** — `ics/<club>.ics` per club, so a subscription keeps up
+  when TV moves a fixture; a one-off download cannot.
 
 ## Competitions
 
@@ -53,7 +58,8 @@ carries no Premier League markets at all.
 
 ## Files
 
-    fetch_data.py   both feeds -> data.json   (stdlib only)
+    fetch_data.py     both feeds -> data.json + ics/*.ics   (stdlib only)
+    build_scorers.py  goalscorers, accumulated match by match (merge-only)
     test_fetch.py   self-check: DST + name matching + data integrity
     index.html      the whole UI, one file, no framework
     data.json       generated, ~50KB

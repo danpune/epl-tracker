@@ -58,8 +58,24 @@ def fetch_season():
     return out
 
 
+def fetch_colors():
+    """Club colours, so the page can wear whichever club you follow."""
+    try:
+        d = get(f"{ESPN}/teams")
+        out = {}
+        for x in d["sports"][0]["leagues"][0]["teams"]:
+            t = x["team"]
+            out[key(t["displayName"])] = ("#" + (t.get("color") or "3d195b"),
+                                          "#" + (t.get("alternateColor") or "1d1526"))
+        return out
+    except Exception as e:
+        print(f"  colours: {e} — falling back to the league palette")
+        return {}
+
+
 def fetch_table():
-    """Live league table + the club metadata (logo, short name) the UI renders."""
+    """Live league table + the club metadata (logo, colours, short name) the UI renders."""
+    colors = fetch_colors()
     d = get(f"{ESPN2}/standings?season={SEASON[:4]}")
     entries = d["children"][0]["standings"]["entries"]
     table, teams = [], {}
@@ -72,8 +88,10 @@ def fetch_table():
         if logo:  # ESPN's own resizer: 130KB source -> ~3KB. 20 crests, not 2.6MB.
             logo = ("https://a.espncdn.com/combiner/i?img="
                     + logo.split("a.espncdn.com", 1)[-1] + "&w=64&h=64")
+        col = colors.get(k, ("#3d195b", "#1d1526"))
         teams[k] = {"name": t["displayName"], "short": t.get("shortDisplayName", t["displayName"]),
-                    "abbr": t.get("abbreviation", ""), "id": t.get("id", ""), "logo": logo}
+                    "abbr": t.get("abbreviation", ""), "id": t.get("id", ""), "logo": logo,
+                    "col": col[0], "col2": col[1]}
         table.append({"t": k, "rank": val("rank"), "pld": val("gamesPlayed"),
                       "w": val("wins"), "d": val("ties"), "l": val("losses"),
                       "gf": val("pointsFor"), "ga": val("pointsAgainst"),
@@ -83,8 +101,9 @@ def fetch_table():
 
 
 def fetch_event_ids():
-    """ESPN's event id for every league fixture, so the page can pull lineups and
-    match stats on demand. Fetched a month at a time — the scoreboard caps a range."""
+    """ESPN's event id AND the US broadcaster for every league fixture, in one pass.
+    The id lets the page pull lineups/stats on demand; the broadcaster answers the
+    question a schedule alone cannot — where do I actually watch this."""
     ids, y = {}, int(SEASON[:4])
     months = [(y, m) for m in range(7, 13)] + [(y + 1, m) for m in range(1, 8)]
     for yy, mm in months:
@@ -103,7 +122,13 @@ def fetch_event_ids():
             h = next((x for x in comps if x.get("homeAway") == "home"), None)
             a = next((x for x in comps if x.get("homeAway") == "away"), None)
             if h and a:
-                ids[(key(h["team"]["displayName"]), key(a["team"]["displayName"]))] = str(e.get("id", ""))
+                tv = []
+                for b in (c.get("broadcasts") or []):
+                    tv += [n for n in (b.get("names") or []) if n]
+                seen = set()
+                tv = [x for x in tv if not (x in seen or seen.add(x))]
+                ids[(key(h["team"]["displayName"]), key(a["team"]["displayName"]))] = {
+                    "e": str(e.get("id", "")), "tv": tv[:3]}
     return ids
 
 
@@ -247,6 +272,47 @@ def fetch_odds(teams):
     return odds
 
 
+def ics_escape(t):
+    return t.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", " ")
+
+
+def write_calendars(data):
+    """One .ics per club, committed to the repo.
+
+    A downloaded file is a snapshot; a SUBSCRIBED url keeps updating, which matters
+    here because broadcasters move fixtures for TV all season.
+    """
+    os.makedirs("ics", exist_ok=True)
+    stamp = data["updated"].replace("-", "").replace(":", "")
+    for k, t in data["teams"].items():
+        ms = [m for m in data["matches"] if k in (m["h"], m["a"])]
+        if len(ms) < 5:
+            continue                                   # cup-only opponent, not worth a feed
+        out = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//epl-tracker//EN",
+               "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+               f"X-WR-CALNAME:{ics_escape(t['name'])} {data['season']}",
+               "REFRESH-INTERVAL;VALUE=DURATION:PT6H", "X-PUBLISHED-TTL:PT6H"]
+        for m in ms:
+            st = datetime.strptime(m["utc"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
+            en = st + timedelta(hours=2)
+            comp = {"PL": "Premier League", "UCL": "Champions League",
+                    "FA": "FA Cup", "EFL": "EFL Cup"}.get(m.get("c", "PL"), "")
+            title = f"{data['teams'][m['h']]['name']} v {data['teams'][m['a']]['name']}"
+            if m.get("c") and m["c"] != "PL":
+                title += f" ({comp})"
+            desc = comp + (f" matchday {m['md']}" if m.get("c") == "PL" and m.get("md") else "")
+            if m.get("tv"):
+                desc += " — TV (US): " + ", ".join(m["tv"])
+            out += ["BEGIN:VEVENT",
+                    f"UID:{m.get('e') or (m['h'] + m['a'] + m['utc'])}@epl-tracker",
+                    f"DTSTAMP:{stamp}", f"DTSTART:{st:%Y%m%dT%H%M%SZ}", f"DTEND:{en:%Y%m%dT%H%M%SZ}",
+                    f"SUMMARY:{ics_escape(title)}", f"DESCRIPTION:{ics_escape(desc)}", "END:VEVENT"]
+        out.append("END:VCALENDAR")
+        with open(f"ics/{k}.ics", "w") as f:
+            f.write("\r\n".join(out) + "\r\n")
+    print(f"  wrote {len(os.listdir('ics'))} subscribable calendars")
+
+
 def main():
     matches = fetch_season()
     table, teams = fetch_table()
@@ -260,13 +326,16 @@ def main():
     matches.sort(key=lambda x: x["utc"])
 
     eids = fetch_event_ids()
-    linked = 0
+    linked = tv_n = 0
     for m in matches:
         i = eids.get((m["h"], m["a"]))
         if i:
-            m["e"] = i
+            m["e"] = i["e"]
             linked += 1
-    print(f"  linked {linked}/{len(matches)} matches to ESPN event ids (lineups + stats)")
+            if i["tv"]:
+                m["tv"] = i["tv"]
+                tv_n += 1
+    print(f"  linked {linked}/{len(matches)} to ESPN event ids, {tv_n} with a US broadcaster")
 
     odds = fetch_odds(teams)
     priced = 0
@@ -298,6 +367,7 @@ def main():
             "table": table, "matches": matches}
     with open("data.json", "w") as f:
         json.dump(data, f, separators=(",", ":"))
+    write_calendars(data)
     played = sum(1 for m in matches if m.get("done"))
     print(f"wrote data.json — {len(matches)} matches, {played} played, {live} live, "
           f"{priced} with odds, {len(table)} table rows")

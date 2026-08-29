@@ -9,23 +9,54 @@
 <meta name="theme-color" content="#3d195b">
 <link rel="preload" href="data.json" as="fetch" crossorigin>
 <style>
-:root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e}
+:root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e;
+  --club:#3d195b;--club2:#1d1526}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .wrap{max-width:900px;margin:0 auto;padding:0 16px 60px}
-header{padding:26px 0 16px;border-bottom:2px solid var(--acc)}
-.kicker{font-size:12px;letter-spacing:.22em;color:var(--acc);text-transform:uppercase;font-weight:700}
+header{padding:26px 0 16px;border-bottom:2px solid var(--club)}
+.kicker{font-size:12px;letter-spacing:.22em;color:var(--club);text-transform:uppercase;font-weight:700}
 h1{margin:6px 0 4px;font-size:30px;font-weight:900;letter-spacing:-.01em}
 .sub{color:var(--muted);font-size:13.5px}
 /* team picker */
-.picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:12px 14px}
+.picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--club);border-radius:12px;padding:12px 14px}
 .picker label{font-size:13px;color:var(--muted)}
 .picker select{background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--text);font-size:15px;font-weight:700;padding:7px 10px}
 .picker .tz{font-size:12.5px;color:var(--muted);margin-left:auto}
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:16px;padding:20px 22px;margin:16px 0 4px;
+  background:linear-gradient(135deg,var(--club) 0%,color-mix(in srgb,var(--club) 55%,#120a18) 100%);color:#fff;
+  box-shadow:0 6px 22px -10px rgba(0,0,0,.5)}
+.hero .lbl{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.82;font-weight:700}
+.hero .vs{display:flex;align-items:center;gap:10px;margin:12px 0 4px;max-width:470px}
+.hero .cl{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;min-width:0;flex:1}
+.hero .cl:last-of-type{justify-content:flex-end;text-align:right}
+.hero .cl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero .cl img{width:34px;height:34px;flex:0 0 auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+.hero .sep{flex:0 0 auto}
+.hero .sep{opacity:.6;font-size:13px;font-weight:700;letter-spacing:.1em}
+.hero .when{font-size:14px;opacity:.95;margin-top:7px}
+.hero .cd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px;max-width:340px}
+.hero .cd div{background:rgba(255,255,255,.16);border-radius:10px;padding:7px 6px;text-align:center;backdrop-filter:blur(3px)}
+.hero .cd b{display:block;font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.15}
+.hero .cd span{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.hero .tag{display:inline-block;margin-top:12px;background:rgba(255,255,255,.2);border-radius:999px;
+  padding:5px 12px;font-size:12px;font-weight:700}
+.hero .go2{position:absolute;inset:0;border:0;background:none;cursor:pointer}
+.hero.livenow{animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 22px -10px rgba(0,0,0,.5)}50%{box-shadow:0 6px 30px -6px rgba(220,30,30,.75)}}
+.streak{font-size:13px;opacity:.95;margin-top:9px}
 /* tabs */
 nav{display:flex;gap:6px;margin:18px 0 16px;flex-wrap:wrap}
 nav button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 16px;font-size:13.5px;cursor:pointer}
-nav button.on{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+nav button.on{background:var(--club);color:#fff;border-color:var(--club);font-weight:700}
+nav button{transition:background .15s,color .15s,border-color .15s}
+nav button:hover{border-color:var(--club)}
+.m{transition:border-color .12s,transform .12s}
+.m:hover{border-color:var(--club)}
+.chipbar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.chipbar button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer}
+.chipbar button.on{background:var(--club);color:#fff;border-color:var(--club);font-weight:700}
 /* table */
 table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:10px 6px;font-weight:700;border-bottom:1px solid var(--line)}
@@ -33,8 +64,8 @@ th:nth-child(2){text-align:left}
 td{padding:9px 6px;text-align:right;font-size:14px;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line)}
 td:nth-child(2){text-align:left}
 tr:last-child td{border-bottom:0}
-tr.me td{background:#f3ecfa;font-weight:700}
-tr.me td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+tr.me td{background:color-mix(in srgb,var(--club) 9%,#fff);font-weight:700}
+tr.me td:first-child{box-shadow:inset 3px 0 0 var(--club)}
 .cl td:first-child{box-shadow:inset 3px 0 0 var(--good)}
 .rel td:first-child{box-shadow:inset 3px 0 0 var(--live)}
 tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
@@ -42,12 +73,24 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .tm img{width:22px;height:22px;flex:0 0 auto}
 .tm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pts{font-weight:800}
+.scorers{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:18px}
+.scorers h3{margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sc1{display:flex;align-items:center;gap:9px;font-size:14px;padding:6px 0;border-top:1px solid var(--line)}
+.sc1:first-of-type{border-top:0}
+.sc1 .r{color:var(--muted);width:16px;font-variant-numeric:tabular-nums;flex:0 0 auto;font-size:12px}
+.sc1 img{width:18px;height:18px;flex:0 0 auto}
+.sc1 .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc1 .g{font-weight:800;font-variant-numeric:tabular-nums;color:var(--club)}
+.sc1 .cup{color:var(--muted);font-size:11px;font-weight:600}
+.nx{display:flex;align-items:center;gap:5px;justify-content:flex-end;font-size:11.5px;color:var(--muted)}
+.nx img{width:16px;height:16px}
+.el td:first-child{box-shadow:inset 3px 0 0 #d98324}
 .key{font-size:12px;color:var(--muted);margin-top:10px;display:flex;gap:16px;flex-wrap:wrap}
 .key i{font-style:normal;display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
 /* fixtures */
-.day{margin:22px 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);border-bottom:1px solid var(--line);padding-bottom:4px;font-weight:700}
+.day{margin:22px 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--club);border-bottom:1px solid var(--line);padding-bottom:4px;font-weight:700}
 .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px}
-.m.me{border-left:3px solid var(--acc)}
+.m.me{border-left:3px solid var(--club)}
 .m.live{border-left:3px solid var(--live)}
 .m .side{flex:1;display:flex;align-items:center;gap:7px;min-width:0;font-size:14.5px}
 .m .side.a{justify-content:flex-end;text-align:right}
@@ -76,11 +119,19 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .sbar .nm{width:112px;color:var(--muted);text-align:center;flex:0 0 auto;font-size:11px}
 .sbar .t{flex:1;display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--bg)}
 .sbar .t i{display:block}.sbar .t .l{background:var(--acc)}.sbar .t .r{background:#c3b6d2}
+.vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:4px}
+.vcard{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px;cursor:pointer;text-align:left;overflow:hidden}
+.vcard:hover{border-color:var(--club)}
+.vcard img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:7px;background:#ddd8e2;display:block}
+.vcard .vt{font-size:12px;font-weight:700;margin-top:6px;line-height:1.35}
+.vcard .vd{font-size:11px;color:var(--muted);margin-top:2px}
+.vplay{width:100%;border-radius:10px;background:#000;margin-top:6px}
 .ev{font-size:13px;padding:3px 0;border-top:1px solid var(--line);display:flex;gap:8px}
 .ev .mn{color:var(--muted);width:34px;flex:0 0 auto;font-variant-numeric:tabular-nums}
 .formpill{display:inline-flex;gap:2px}
 .formpill i{width:15px;height:15px;border-radius:3px;font-style:normal;font-size:9.5px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center}
 .formpill .fw{background:#137a4a}.formpill .fd{background:#9b93a6}.formpill .fl{background:#c0392b}
+.tv{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:2px 6px;flex:0 0 auto;white-space:nowrap}
 .cbadge{font-size:9.5px;letter-spacing:.07em;font-weight:800;text-transform:uppercase;border-radius:4px;padding:2px 5px;background:#ece4f4;color:var(--acc);flex:0 0 auto}
 .cbadge.ucl{background:#e0e9f7;color:#1a4a8a}.cbadge.fa{background:#fbe8e4;color:#a8341c}.cbadge.efl{background:#e6f0e8;color:#1c6b45}
 .odds{display:flex;gap:1px;margin:0 0 7px;border-radius:0 0 9px 9px;overflow:hidden;height:20px;font-size:10px;font-weight:700}
@@ -94,13 +145,13 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 /* kickoff times */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
 .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.c .n{font-size:30px;font-weight:900;line-height:1.1;color:var(--acc);font-variant-numeric:tabular-nums}
+.c .n{font-size:30px;font-weight:900;line-height:1.1;color:var(--club);font-variant-numeric:tabular-nums}
 .c .l{font-size:12.5px;color:var(--muted);margin-top:3px}
 .bars{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .bar{display:flex;align-items:center;gap:10px;padding:2.5px 0;font-size:13px}
 .bar .h{width:76px;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
 .bar .t{flex:1;background:var(--bg);border-radius:4px;overflow:hidden;height:17px}
-.bar .f{height:100%;background:var(--acc);border-radius:4px;min-width:2px}
+.bar .f{height:100%;background:var(--club);border-radius:4px;min-width:2px}
 .bar .f.dim{background:#c3b6d2}
 .bar .v{width:26px;text-align:right;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
 .note{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.55}
@@ -132,11 +183,14 @@ footer a{color:var(--acc)}
   <span class="tz" id="tz"></span>
 </div>
 
+<div id="hero"></div>
+
 <nav>
   <button data-t="table" class="on">Table</button>
   <button data-t="fix">Fixtures</button>
   <button data-t="tz">My Kickoff Times</button>
   <button data-t="say">Comments</button>
+  <button data-t="about">About</button>
 </nav>
 
 <main id="view"><p class="sub">Loading…</p></main>
@@ -149,13 +203,14 @@ footer a{color:var(--acc)}
 </div>
 
 <script>
-var D = null, TEAM = localStorage.getItem('epl.team') || 'manchesterunited', TAB = 'table', showAll = false, showPast = false;
+var D = null, SCORERS = null, TEAM = localStorage.getItem('epl.team') || 'manchesterunited', TAB = 'table', showAll = false, showPast = false;
 var TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'your timezone';
 var view = document.getElementById('view');
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function team(k){ return D.teams[k] || {name:k, short:k, abbr:'', logo:''}; }
-function crest(k){ var t = team(k); return t.logo ? '<img src="'+esc(t.logo)+'" alt="" loading="lazy" width="22" height="22">' : ''; }
+function crest(k, big){ var t = team(k);
+  return t.logo ? '<img src="'+esc(t.logo)+'" alt="" loading="lazy" width="'+(big?34:22)+'" height="'+(big?34:22)+'">' : ''; }
 function dt(m){ return new Date(m.utc.replace('Z',':00Z')); }
 
 var fDay = new Intl.DateTimeFormat([], {weekday:'long', month:'short', day:'numeric'});
@@ -179,12 +234,44 @@ function formPill(k){
     return '<i class="f'+r.toLowerCase()+'" title="'+r+'">'+r+'</i>'; }).join('') + '</span>';
 }
 
+function nextOpp(k){
+  var now = Date.now();
+  var m = D.matches.filter(function(x){
+    return (x.h === k || x.a === k) && !x.done && dt(x).getTime() > now - 7200000; })[0];
+  if (!m) return '<span style="color:var(--muted)">–</span>';
+  var opp = m.h === k ? m.a : m.h;
+  return '<div class="nx" title="'+esc(team(opp).name)+(m.h===k?' (H)':' (A)')+'">'
+       + crest(opp) + '<span>'+(m.h === k ? 'H' : 'A')+'</span></div>';
+}
+
+function scorersBlock(){
+  if (!SCORERS) return '';
+  var byId = {};
+  Object.keys(D.teams).forEach(function(k){ if (D.teams[k].id) byId[D.teams[k].id] = k; });
+  var list = Object.keys(SCORERS.players || {}).map(function(k){ return SCORERS.players[k]; })
+    .filter(function(p){ return (p.l || 0) > 0; })
+    .sort(function(a, b){ return (b.l - a.l) || (b.g - a.g) || a.n.localeCompare(b.n); })
+    .slice(0, 10);
+  if (!list.length) return '';
+  return '<div class="scorers"><h3>Top scorers \u00b7 Premier League</h3>'
+    + list.map(function(p, i){
+        var k = byId[p.t], extra = p.g > p.l ? ' <span class="cup">+'+(p.g - p.l)+' in cups</span>' : '';
+        return '<div class="sc1"><span class="r">'+(i+1)+'</span>'
+             + (k ? crest(k) : '')
+             + '<span class="nm">'+esc(p.n)+extra+'</span>'
+             + '<span class="g">'+p.l+'</span></div>';
+      }).join('')
+    + '</div>';
+}
+
 /* ---------- table ---------- */
 function renderTable(){
   var rows = D.table.map(function(r){
     var t = team(r.t), cls = [];
     if (r.t === TEAM) cls.push('me');
-    if (r.rank <= 4) cls.push('cl'); else if (r.rank >= 18) cls.push('rel');
+    if (r.rank <= 4) cls.push('cl');
+    else if (r.rank <= 6) cls.push('el');
+    else if (r.rank >= 18) cls.push('rel');
     return '<tr class="'+cls.join(' ')+'">'
       + '<td>'+r.rank+'</td>'
       + '<td><div class="tm">'+crest(r.t)+'<span>'+esc(t.short)+'</span></div></td>'
@@ -193,14 +280,17 @@ function renderTable(){
       + '<td class="hide-s">'+r.gf+'</td><td class="hide-s">'+r.ga+'</td>'
       + '<td>'+(r.gd > 0 ? '+' : '')+r.gd+'</td>'
       + '<td class="hide-s">'+formPill(r.t)+'</td>'
+      + '<td class="hide-s">'+nextOpp(r.t)+'</td>'
       + '<td class="pts">'+r.pts+'</td></tr>';
   }).join('');
   view.innerHTML = '<table><thead><tr><th>#</th><th>Club</th><th>Pl</th>'
     + '<th class="hide-s">W</th><th class="hide-s">D</th><th class="hide-s">L</th>'
-    + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th class="hide-s">Form</th><th>Pts</th></tr></thead>'
+    + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th class="hide-s">Form</th><th class="hide-s">Next</th><th>Pts</th></tr></thead>'
     + '<tbody>'+rows+'</tbody></table>'
     + '<div class="key"><span><i style="background:#137a4a"></i>Champions League</span>'
-    + '<span><i style="background:#c0392b"></i>Relegation</span></div>';
+    + '<span><i style="background:#d98324"></i>Europa</span>'
+    + '<span><i style="background:#c0392b"></i>Relegation</span></div>'
+    + scorersBlock();
 }
 
 /* ---------- calendar ---------- */
@@ -314,8 +404,42 @@ function renderDetail(m, box){
     });
   }
 
+  var vids = (d.videos || []).filter(function(v){ return v.thumbnail; });
+  if (vids.length){
+    html += '<h4>Video'+(m.done ? '' : ' &amp; build-up')+'</h4><div class="vids">';
+    vids.slice(0, 6).forEach(function(v, i){
+      var src = ((v.links || {}).source || {});
+      var href = (src.HD && src.HD.href) || (src.full && src.full.href) || src.href || '';
+      var web = ((v.links || {}).web || {}).href || '';
+      var mins = v.duration ? Math.floor(v.duration/60)+':'+('0'+(v.duration%60)).slice(-2) : '';
+      // ESPN ships 1920x1080 thumbs (~160KB). Their resizer serves the same frame at ~17KB.
+      var thumb = 'https://a.espncdn.com/combiner/i?img=' + encodeURIComponent(v.thumbnail) + '&w=360';
+      html += '<div class="vcard" data-v="'+i+'" data-src="'+esc(href)+'" data-web="'+esc(web)+'">'
+            + '<img src="'+esc(thumb)+'" alt="" loading="lazy" decoding="async" width="360" height="203">'
+            + '<div class="vt">'+esc(v.headline || 'Clip')+'</div>'
+            + '<div class="vd">'+esc(mins)+'</div></div>';
+    });
+    html += '</div><div class="olab">Clips come from ESPN. Full match highlights are rights-restricted, '
+          + 'so what appears here is ESPN\'s own match video and reaction.</div>';
+  }
+
   html += '</div>';
   box.innerHTML = html;
+
+  // click a thumbnail -> play inline, falling back to ESPN's page if the file will not stream
+  [].slice.call(box.querySelectorAll('.vcard')).forEach(function(card){
+    card.onclick = function(ev){
+      ev.stopPropagation();
+      var src = card.dataset.src, web = card.dataset.web;
+      if (card.querySelector('video')) return;
+      if (!src){ if (web) window.open(web, '_blank', 'noopener'); return; }
+      var v = document.createElement('video');
+      v.src = src; v.controls = true; v.autoplay = true; v.className = 'vplay'; v.playsInline = true;
+      v.onerror = function(){ if (web) window.open(web, '_blank', 'noopener'); };
+      card.appendChild(v);
+    };
+  });
+
   var btn = document.getElementById('ics-'+m.e);
   if (btn) btn.onclick = function(){
     downloadICS([m], team(m.h).short+' v '+team(m.a).short, 'match.ics');
@@ -347,6 +471,7 @@ function matchRow(m){
     + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
     + mid
     + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+badge+'</div>'
+    + (m.tv ? '<div class="tv" title="US broadcast">'+esc(m.tv.join(' / '))+'</div>' : '')
     + '<div class="go">\u203a</div>'
     + '</div>';
 
@@ -393,9 +518,12 @@ function renderFixtures(){
   // one click puts the whole season in your calendar app
   var mineList = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
   var bar = document.createElement('div');
-  bar.innerHTML = '<a class="cal" id="allics">\uFF0B Add all '+mineList.length+' '
-                + esc(team(TEAM).short)+' matches to your calendar (.ics)</a>'
-                + '<span class="olab">Tap any match for lineups, stats and a single-match calendar link.</span>';
+  var feed = location.origin + location.pathname.replace(/[^/]*$/, '') + 'ics/' + TEAM + '.ics';
+  bar.innerHTML = '<a class="cal" id="allics">\uFF0B Download all '+mineList.length+' '
+                + esc(team(TEAM).short)+' matches (.ics)</a>'
+                + '<a class="cal" href="webcal://'+esc(feed.replace(/^https?:\/\//,''))+'">\ud83d\udd01 Subscribe (auto-updates)</a>'
+                + '<span class="olab">A download is a snapshot; a subscription keeps up when TV moves a fixture. '
+                + 'Tap any match for lineups, stats, video and a single-match calendar link.</span>';
   view.insertBefore(bar, view.firstChild.nextSibling);
   document.getElementById('allics').onclick = function(){
     downloadICS(mineList, team(TEAM).name + ' 2026/27', 'epl-' + TEAM + '.ics');
@@ -508,11 +636,115 @@ function renderSay(){
   }, 4000);
 }
 
+/* ---------- hero: the next match, counting down ---------- */
+var heroTimer = null;
+function streakText(k){
+  var f = formOf(k, 20);
+  if (!f.length) return '';
+  var last = f[f.length-1], n = 0;
+  for (var i = f.length-1; i >= 0 && f[i] === last; i--) n++;
+  if (n < 2) return {W:'Won the last one.', D:'Drew the last one.', L:'Lost the last one.'}[last] || '';
+  return {W:n+' wins in a row \u2014 keep it going.',
+          D:n+' draws in a row.',
+          L:n+' straight defeats.'}[last] || '';
+}
+
+function renderHero(){
+  var el = document.getElementById('hero');
+  var t = team(TEAM);
+  document.documentElement.style.setProperty('--club', t.col || '#3d195b');
+  document.documentElement.style.setProperty('--club2', t.col2 || '#1d1526');
+
+  var now = Date.now();
+  var mine = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
+  var live = mine.filter(function(m){ return m.live; })[0];
+  var next = live || mine.filter(function(m){ return !m.done && dt(m).getTime() > now - 7200000; })[0];
+
+  if (heroTimer){ clearInterval(heroTimer); heroTimer = null; }
+  if (!next){ el.innerHTML = ''; return; }
+
+  var opp = next.h === TEAM ? next.a : next.h, homeAway = next.h === TEAM ? 'Home' : 'Away';
+  var comp = next.c === 'PL' ? 'Premier League \u00b7 Matchday ' + next.md : (COMP[next.c] || next.c);
+  var streak = streakText(TEAM);
+
+  el.innerHTML = '<div class="hero'+(live?' livenow':'')+'">'
+    + '<div class="lbl">'+(live ? '\u25cf Playing now' : 'Next up for ' + esc(t.short))+'</div>'
+    + '<div class="vs">'
+    +   '<div class="cl">'+crest(next.h, 1)+'<span>'+esc(team(next.h).short)+'</span></div>'
+    +   '<div class="sep">V</div>'
+    +   '<div class="cl"><span>'+esc(team(next.a).short)+'</span>'+crest(next.a, 1)+'</div>'
+    + '</div>'
+    + '<div class="when">'+esc(fDay.format(dt(next)))+' \u00b7 '+esc(fTime.format(dt(next)))+' your time</div>'
+    + '<div class="cd" id="cd"></div>'
+    + '<div class="tag">'+esc(homeAway)+' \u00b7 '+esc(comp)
+    +   (next.tv ? ' \u00b7 \ud83d\udcfa ' + esc(next.tv.join(' / ')) : '')+'</div>'
+    + (streak ? '<div class="streak">'+esc(streak)+'</div>' : '')
+    + '<button class="go2" id="heroGo" aria-label="Open this match"></button>'
+    + '</div>';
+
+  var cd = document.getElementById('cd');
+  function tick(){
+    var ms = dt(next).getTime() - Date.now();
+    if (live || ms <= 0){
+      cd.innerHTML = '<div><b>'+(live ? esc(next.clock || 'LIVE') : 'KICK OFF')+'</b><span>'
+                   + (live ? 'in play' : 'under way') + '</span></div>';
+      return;
+    }
+    var s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor(s%86400/3600),
+        mi = Math.floor(s%3600/60), se = s%60;
+    cd.innerHTML = [[d,'days'],[h,'hrs'],[mi,'min'],[se,'sec']].map(function(x){
+      return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('');
+  }
+  tick();
+  heroTimer = setInterval(tick, 1000);
+
+  document.getElementById('heroGo').onclick = function(){
+    TAB = 'fix';
+    document.querySelectorAll('nav button').forEach(function(x){ x.classList.toggle('on', x.dataset.t === 'fix'); });
+    render();
+    setTimeout(function(){
+      var row = view.querySelector('.m[data-i="'+next._i+'"]');
+      if (row){ row.click(); row.scrollIntoView({block:'center'}); }
+    }, 30);
+  };
+}
+
+/* ---------- about ---------- */
+function renderAbout(){
+  view.innerHTML = '<div class="saybox">'
+  + '<h4 style="margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Where the data comes from</h4>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
+  +   '<b>Schedule</b> — <a href="https://github.com/openfootball/football.json">openfootball/football.json</a> (CC0). '
+  +   'The full 380-match season, published months ahead.<br>'
+  +   '<b>Table, results, lineups, match stats, video, US broadcasters</b> — ESPN\'s public feed. '
+  +   'Lineups and video load only when you tap a match.<br>'
+  +   '<b>Odds</b> — <a href="https://kalshi.com">Kalshi</a>\'s KXEPLGAME markets, shown only where a market is actually quoted.<br>'
+  +   '<b>Comments</b> — GitHub Discussions via giscus, loaded only when you open that tab.'
+  + '</div>'
+  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Privacy</h4>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
+  +   'No accounts, no tracking, no analytics, no cookies. The only thing stored on your device '
+  +   'is which club you follow, in this browser. Times come from your browser\'s own timezone; '
+  +   'nothing about you is sent anywhere.'
+  + '</div>'
+  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Caveats</h4>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
+  +   'Later fixtures are provisional — broadcasters move matches about five weeks out, so subscribe '
+  +   'to the calendar rather than downloading it once. Full match highlights are rights-restricted; '
+  +   'the video shown is ESPN\'s own. Odds are informational, not betting advice. '
+  +   'Not affiliated with the Premier League, any club, ESPN or Kalshi.'
+  + '</div>'
+  + '<a class="gh" href="https://github.com/danpune/epl-tracker">Source on GitHub</a>'
+  + '</div>';
+}
+
 /* ---------- shell ---------- */
 function render(){
+  renderHero();
   if (TAB === 'table') renderTable();
   else if (TAB === 'fix') renderFixtures();
   else if (TAB === 'say') renderSay();
+  else if (TAB === 'about') renderAbout();
   else renderTZ();
 }
 
@@ -522,6 +754,10 @@ document.querySelectorAll('nav button').forEach(function(b){
     b.classList.add('on'); TAB = b.dataset.t; render();
   };
 });
+
+fetch('scorers.json').then(function(r){ return r.ok ? r.json() : null; })
+  .then(function(s){ SCORERS = s; if (D && TAB === 'table') render(); })
+  .catch(function(){});
 
 fetch('data.json').then(function(r){ return r.json(); }).then(function(d){
   D = d;
