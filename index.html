@@ -152,6 +152,18 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .ovl .fr{aspect-ratio:16/9;width:100%}
 .ovl iframe{width:100%;height:100%;border:0;border-radius:12px;background:#000}
 .playbtn{border:0;background:none;color:var(--club);font-size:15px;cursor:pointer;padding:2px 4px;flex:0 0 auto}
+.wx{display:inline-flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line);
+  border-radius:9px;padding:6px 11px;font-size:13px;margin:0 0 9px}
+.wx b{font-weight:800}
+.wx .wsub{color:var(--muted);font-size:11.5px}
+.hero .wxh{display:inline-block;margin-top:9px;margin-left:6px;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700}
+.sqgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+.sqp{font-size:13px;padding:3px 0;display:flex;gap:8px;border-top:1px solid var(--line)}
+.sqp .no{color:var(--muted);width:22px;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.sqp .ag{color:var(--muted);margin-left:auto;font-size:11px;flex:0 0 auto}
+.sqcol h5{margin:0 0 5px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--club)}
+.clubcell{cursor:pointer}
+.clubcell:hover span{text-decoration:underline}
 .h2h{display:flex;gap:2px;height:22px;border-radius:6px;overflow:hidden;margin:2px 0 8px;font-size:10.5px;font-weight:800}
 .h2h div{display:flex;align-items:center;justify-content:center;color:#fff;min-width:0;white-space:nowrap;overflow:hidden}
 .h2h .a{background:var(--club)}.h2h .d{background:#9b93a6}.h2h .b{background:#6b6377}
@@ -202,6 +214,17 @@ footer a{color:var(--club)}
 .saybox .gh{display:inline-block;margin-top:10px;background:var(--club);color:#fff;text-decoration:none;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700}
 .saybox .fine{font-size:12.5px;color:var(--muted);margin-top:12px}
 .err{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--live);border-radius:10px;padding:14px}
+@media(max-width:430px){
+  /* at ~340px the two crests plus the V leave ~66px per club, which truncates
+     "Man United". Stack the matchup instead of shrinking it to nothing. */
+  .hero .vs{flex-direction:column;align-items:stretch;gap:4px;max-width:100%}
+  .hero .cl{flex:none;justify-content:flex-start;text-align:left}
+  .hero .cl:last-of-type{justify-content:flex-start;text-align:left}
+  .hero .cl:last-of-type{flex-direction:row-reverse;justify-content:flex-end}
+  .hero .sep{align-self:flex-start;margin-left:2px;opacity:.55}
+  .hero .cd{grid-template-columns:repeat(4,1fr);gap:6px}
+  .hero .cd b{font-size:19px}
+}
 @media(max-width:560px){
   h1{font-size:24px}
   .hide-s{display:none}
@@ -315,7 +338,8 @@ function renderTable(){
     else if (r.rank >= 18) cls.push('rel');
     return '<tr class="'+cls.join(' ')+'">'
       + '<td>'+r.rank+'</td>'
-      + '<td><div class="tm">'+crest(r.t)+'<span>'+esc(t.short)+'</span></div></td>'
+      + '<td><div class="tm clubcell" data-squad="'+esc(r.t)+'" title="See the squad">'
+      +   crest(r.t)+'<span>'+esc(t.short)+'</span></div></td>'
       + '<td>'+r.pld+'</td>'
       + '<td class="hide-s">'+r.w+'</td><td class="hide-s">'+r.d+'</td><td class="hide-s">'+r.l+'</td>'
       + '<td class="hide-s">'+r.gf+'</td><td class="hide-s">'+r.ga+'</td>'
@@ -332,6 +356,10 @@ function renderTable(){
     + '<span><i style="background:#d98324"></i>Europa</span>'
     + '<span><i style="background:#c0392b"></i>Relegation</span></div>'
     + scorersBlock();
+  view.onclick = function(ev){
+    var c = ev.target.closest ? ev.target.closest('[data-squad]') : null;
+    if (c) openSquad(c.dataset.squad);
+  };
 }
 
 /* ---------- calendar ---------- */
@@ -406,6 +434,51 @@ function h2hBlock(m){
     + rows;
 }
 
+/* ---------- kickoff weather (Open-Meteo, no key; ~16 days of forecast) ---------- */
+var wxCache = {};
+var WXC = {0:['Clear','\u2600\ufe0f'],1:['Mainly clear','\ud83c\udf24\ufe0f'],2:['Partly cloudy','\u26c5'],
+  3:['Overcast','\u2601\ufe0f'],45:['Fog','\ud83c\udf2b\ufe0f'],48:['Fog','\ud83c\udf2b\ufe0f'],
+  51:['Light drizzle','\ud83c\udf26\ufe0f'],53:['Drizzle','\ud83c\udf26\ufe0f'],55:['Heavy drizzle','\ud83c\udf26\ufe0f'],
+  61:['Light rain','\ud83c\udf27\ufe0f'],63:['Rain','\ud83c\udf27\ufe0f'],65:['Heavy rain','\ud83c\udf27\ufe0f'],
+  71:['Light snow','\ud83c\udf28\ufe0f'],73:['Snow','\ud83c\udf28\ufe0f'],75:['Heavy snow','\ud83c\udf28\ufe0f'],
+  80:['Showers','\ud83c\udf26\ufe0f'],81:['Showers','\ud83c\udf27\ufe0f'],82:['Heavy showers','\ud83c\udf27\ufe0f'],
+  95:['Thunderstorm','\u26c8\ufe0f'],96:['Thunderstorm','\u26c8\ufe0f'],99:['Thunderstorm','\u26c8\ufe0f']};
+
+function wxEligible(m){
+  if (m.done || !m.v || !(D.venues || {})[m.v]) return false;
+  var days = (dt(m).getTime() - Date.now()) / 86400000;
+  return days > -0.2 && days < 15;              // Open-Meteo forecasts about 16 days
+}
+
+function loadWx(m, then){
+  if (!wxEligible(m)) { then(null); return; }
+  var c = (D.venues || {})[m.v], day = m.utc.slice(0, 10);
+  var ckey = m.v + day + m.utc.slice(11, 13);
+  if (wxCache[ckey] !== undefined){ then(wxCache[ckey]); return; }
+  fetch('https://api.open-meteo.com/v1/forecast?latitude='+c[0]+'&longitude='+c[1]
+      + '&hourly=temperature_2m,precipitation_probability,weather_code&start_date='+day
+      + '&end_date='+day+'&timezone=UTC')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      var h = j.hourly || {}, want = m.utc.slice(0, 13) + ':00';
+      var i = (h.time || []).indexOf(want);
+      if (i < 0){ wxCache[ckey] = null; then(null); return; }
+      wxCache[ckey] = {t: Math.round(h.temperature_2m[i]), p: h.precipitation_probability[i],
+                       c: h.weather_code[i]};
+      then(wxCache[ckey]);
+    })
+    .catch(function(){ wxCache[ckey] = null; then(null); });
+}
+
+function wxHtml(w, venue){
+  if (!w) return '';
+  var d = WXC[w.c] || ['', '\ud83c\udf21\ufe0f'];
+  var f = Math.round(w.t * 9 / 5 + 32);
+  return '<div class="wx"><span>'+d[1]+'</span><b>'+w.t+'\u00b0C / '+f+'\u00b0F</b>'
+    + '<span class="wsub">'+esc(d[0])+' \u00b7 '+w.p+'% rain'
+    + (venue ? ' \u00b7 '+esc(venue) : '')+'</span></div>';
+}
+
 /* ---------- match detail: lineups, stats, key events (fetched on click) ---------- */
 var detailCache = {};
 function statBar(name, l, r){
@@ -427,9 +500,11 @@ function renderDetail(m, box){
 
   // calendar row — always available, even before a lineup exists
   html += '<a class="cal" id="ics-'+m.e+'">＋ Add to calendar (.ics)</a>'
-        + '<a class="cal" href="'+esc(gcalLink(m))+'" target="_blank" rel="noopener noreferrer">＋ Google Calendar</a>';
+        + '<a class="cal" href="'+esc(gcalLink(m))+'" target="_blank" rel="noopener noreferrer">＋ Google Calendar</a>'
+        + '<a class="cal" id="shr-'+m.e+'">↗ Share card</a>'
+        + '<a class="cal" id="sqh-'+m.e+'">👥 Squads</a>';
 
-  html += h2hBlock(m);
+  html += '<div id="wx-'+m.e+'"></div>' + h2hBlock(m);
 
   var rs = d.rosters || [];
   if (rs.length === 2 && (rs[0].roster || []).length){
@@ -517,6 +592,21 @@ function renderDetail(m, box){
       card.appendChild(v);
     };
   });
+
+  loadWx(m, function(w){
+    var slot = document.getElementById('wx-'+m.e);
+    if (slot && w) slot.innerHTML = wxHtml(w, m.v);
+  });
+
+  var sb = document.getElementById('shr-'+m.e);
+  if (sb) sb.onclick = function(e){ e.stopPropagation(); shareCard(m); };
+  var sq = document.getElementById('sqh-'+m.e);
+  if (sq) sq.onclick = function(e){ e.stopPropagation(); openSquad(m.h === TEAM ? m.a : m.h); };
+
+  var sb = document.getElementById('shr-'+m.e);
+  if (sb) sb.onclick = function(e){ e.stopPropagation(); shareCard(m); };
+  var sq = document.getElementById('sqh-'+m.e);
+  if (sq) sq.onclick = function(e){ e.stopPropagation(); openSquad(m.h === TEAM ? m.a : m.h); };
 
   var btn = document.getElementById('ics-'+m.e);
   if (btn) btn.onclick = function(){
@@ -722,6 +812,14 @@ function renderHero(){
     + '<button class="go2" id="heroGo" aria-label="Open this match"></button>'
     + '</div>';
 
+  loadWx(next, function(w){
+    if (!w) return;
+    var tag = el.querySelector('.tag');
+    var d = WXC[w.c] || ['', '\ud83c\udf21\ufe0f'];
+    if (tag) tag.insertAdjacentHTML('afterend',
+      '<span class="wxh">'+d[1]+' '+w.t+'\u00b0C \u00b7 '+w.p+'% rain at kickoff</span>');
+  });
+
   var cd = document.getElementById('cd');
   function tick(){
     var ms = dt(next).getTime() - Date.now();
@@ -759,6 +857,11 @@ function renderAbout(){
   +   '<b>Table, results, lineups, match stats, video, US broadcasters</b> — ESPN\'s public feed. '
   +   'Lineups and video load only when you tap a match.<br>'
   +   '<b>Odds</b> — <a href="https://kalshi.com">Kalshi</a>\'s KXEPLGAME markets, shown only where a market is actually quoted.<br>'
+  +   '<b>Kickoff weather</b> — <a href="https://open-meteo.com">Open-Meteo</a>, free and keyless, '
+  +   'fetched only for matches inside its ~16-day forecast window. Grounds are geocoded once; '
+  +   'a few fall back to city centre, which is the same sky anyway.<br>'
+  +   '<b>Squads</b> — ESPN club rosters, loaded when you open one.<br>'
+  +   '<b>Share cards</b> — drawn in your browser on a canvas. Nothing is uploaded anywhere.'
   + '</div>'
   + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Privacy</h4>'
   + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
@@ -773,8 +876,119 @@ function renderAbout(){
   +   'the video shown is ESPN\'s own. Odds are informational, not betting advice. '
   +   'Not affiliated with the Premier League, any club, ESPN or Kalshi.'
   + '</div>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6;margin-top:16px">'
+  +   'Open source under the MIT licence.</div>'
   + '<a class="gh" href="https://github.com/danpune/epl-tracker">Source on GitHub</a>'
   + '</div>';
+}
+
+/* ---------- squads: full club roster, fetched from ESPN on demand ---------- */
+var squadCache = {};
+var POS_ORDER = [['G','Goalkeepers'],['D','Defenders'],['M','Midfielders'],['F','Forwards']];
+
+function openSquad(k){
+  var t = team(k);
+  var ov = document.createElement('div');
+  ov.className = 'ovl';
+  function body(inner){
+    ov.innerHTML = '<div class="box" style="max-height:88vh;overflow:auto">'
+      + '<div class="bh"><span>'+esc(t.name)+' \u00b7 squad</span>'
+      + '<button aria-label="Close">\u00d7</button></div>'
+      + '<div class="saybox">'+inner+'</div></div>';
+  }
+  body('<p class="sub" style="margin:0">Loading squad\u2026</p>');
+  function close(){ if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', k2); }
+  function k2(e){ if (e.key === 'Escape') close(); }
+  ov.onclick = function(e){ if (e.target === ov || e.target.tagName === 'BUTTON') close(); };
+  document.addEventListener('keydown', k2);
+  document.body.appendChild(ov);
+
+  function draw(list){
+    if (!list || !list.length){ body('<p class="sub" style="margin:0">No squad published for this club.</p>'); return; }
+    var groups = {};
+    list.forEach(function(p){
+      var ab = ((p.position || {}).abbreviation || '?')[0];
+      (groups[ab] = groups[ab] || []).push(p);
+    });
+    var html = '<div class="sqgrid">';
+    POS_ORDER.forEach(function(g){
+      var ps = groups[g[0]];
+      if (!ps || !ps.length) return;
+      html += '<div class="sqcol"><h5>'+esc(g[1])+' ('+ps.length+')</h5>';
+      ps.sort(function(a, b){ return (+a.jersey || 99) - (+b.jersey || 99); }).forEach(function(p){
+        html += '<div class="sqp"><span class="no">'+esc(p.jersey || '')+'</span>'
+              + '<span>'+esc(p.displayName || '')+'</span>'
+              + '<span class="ag">'+(p.age ? p.age : '')+'</span></div>';
+      });
+      html += '</div>';
+    });
+    html += '</div><p class="note">Squad from ESPN, loaded when you opened this. '
+          + 'Useful before kickoff, when the official XI is not out yet.</p>';
+    body(html);
+  }
+
+  if (squadCache[k]){ draw(squadCache[k]); return; }
+  if (!t.id){ draw(null); return; }
+  fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams/'+t.id+'/roster')
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      var a = j.athletes || [];
+      var list = (a.length && a[0] && a[0].items) ? a.reduce(function(acc, g){ return acc.concat(g.items || []); }, []) : a;
+      squadCache[k] = list; draw(list);
+    })
+    .catch(function(){ draw(null); });
+}
+
+/* ---------- share card: drawn in a canvas, nothing uploaded ---------- */
+function shareCard(m){
+  var W = 1200, H = 630, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  var x = c.getContext('2d');
+  var col = team(TEAM).col || '#3d195b';
+
+  var g = x.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, col); g.addColorStop(1, '#191021');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+
+  x.fillStyle = 'rgba(255,255,255,.85)';
+  x.font = '700 26px -apple-system,Segoe UI,Roboto,Helvetica,Arial';
+  x.fillText((m.c === 'PL' ? 'PREMIER LEAGUE \u00b7 MATCHDAY ' + m.md : (COMP[m.c] || '')).toUpperCase(), 70, 92);
+
+  var hn = team(m.h).short, an = team(m.a).short;
+  x.fillStyle = '#fff';
+  x.font = '900 64px -apple-system,Segoe UI,Roboto,Helvetica,Arial';
+  x.textAlign = 'left';  x.fillText(hn, 70, 300);
+  x.textAlign = 'right'; x.fillText(an, W - 70, 300);
+
+  x.textAlign = 'center';
+  if (m.done){
+    x.font = '900 96px -apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    x.fillText(m.hs + ' \u2013 ' + m['as'], W / 2, 310);
+  } else {
+    x.font = '800 40px -apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    x.fillText('V', W / 2, 292);
+    x.fillStyle = 'rgba(255,255,255,.9)';
+    x.font = '600 30px -apple-system,Segoe UI,Roboto,Helvetica,Arial';
+    x.fillText(fDay.format(dt(m)) + ' \u00b7 ' + fTime.format(dt(m)), W / 2, 380);
+  }
+
+  x.fillStyle = 'rgba(255,255,255,.72)';
+  x.font = '600 24px -apple-system,Segoe UI,Roboto,Helvetica,Arial';
+  if (m.v) x.fillText(m.v, W / 2, m.done ? 400 : 430);
+  x.font = '700 22px -apple-system,Segoe UI,Roboto,Helvetica,Arial';
+  x.fillText('danpune.github.io/epl-tracker', W / 2, H - 60);
+
+  var name = (hn + '-v-' + an).replace(/[^\w-]/g, '') + '.png';
+  c.toBlob(function(blob){
+    var file = new File([blob], name, {type: 'image/png'});
+    if (navigator.canShare && navigator.canShare({files: [file]})){
+      navigator.share({files: [file], title: hn + ' v ' + an}).catch(function(){});
+      return;
+    }
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }, 'image/png');
 }
 
 /* ---------- highlights: official Premier League uploads, oEmbed-verified ---------- */
@@ -866,6 +1080,8 @@ function renderAbout(){
   +   'the video shown is ESPN\'s own. Odds are informational, not betting advice. '
   +   'Not affiliated with the Premier League, any club, ESPN or Kalshi.'
   + '</div>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6;margin-top:16px">'
+  +   'Open source under the MIT licence.</div>'
   + '<a class="gh" href="https://github.com/danpune/epl-tracker">Source on GitHub</a>'
   + '</div>';
 }

@@ -12,7 +12,7 @@ Two sources, split by what each is actually good at:
 Run by GitHub Actions. No API key. Standard library only.
 Fail-safe: never overwrites a good data.json with a failed or empty fetch.
 """
-import json, os, re, sys, urllib.request
+import json, os, re, sys, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -127,8 +127,11 @@ def fetch_event_ids():
                     tv += [n for n in (b.get("names") or []) if n]
                 seen = set()
                 tv = [x for x in tv if not (x in seen or seen.add(x))]
+                v = c.get("venue") or {}
                 ids[(key(h["team"]["displayName"]), key(a["team"]["displayName"]))] = {
-                    "e": str(e.get("id", "")), "tv": tv[:3]}
+                    "e": str(e.get("id", "")), "tv": tv[:3],
+                    "v": v.get("fullName", ""),
+                    "vc": ((v.get("address") or {}).get("city") or "")}
     return ids
 
 
@@ -276,6 +279,56 @@ def ics_escape(t):
     return t.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", " ")
 
 
+def geocode_venues(data):
+    """Lat/lon per stadium, so the page can show the kickoff forecast.
+
+    Cached in venues.json and only ever looked up once per ground — Open-Meteo's
+    geocoder is free but there is no reason to ask it the same question weekly.
+    Results are constrained to the UK: "Old Trafford" also matches a park in Australia.
+    """
+    cache = {}
+    if os.path.exists("venues.json"):
+        try:
+            cache = json.load(open("venues.json"))
+        except Exception:
+            pass
+
+    names = {}
+    for m in data["matches"]:
+        if m.get("v") and m["v"] not in cache:
+            names[m["v"]] = m.get("vc", "")
+
+    for name, city in list(names.items())[:25]:          # a few per run; they persist
+        got = None
+        # try the ground, then a punctuation-stripped form ("St James' Park"), then the
+        # city. City-level is good enough for a forecast — same sky, same rain.
+        plain = re.sub(r"[^\w\s]", "", name).strip()
+        # ESPN hyphenates some cities ("Newcastle-upon-Tyne"); the geocoder wants spaces
+        city_q = city.replace("-", " ").strip() if city else None
+        for q in (name, plain if plain != name else None, city_q):
+            if not q:
+                continue
+            try:
+                u = ("https://geocoding-api.open-meteo.com/v1/search?name="
+                     + urllib.parse.quote(q) + "&count=5&language=en&country=GB")
+                res = get(u).get("results") or []
+            except Exception:
+                res = []
+            for r in res:
+                if r.get("country_code") in ("GB", "IE"):
+                    got = [round(r["latitude"], 4), round(r["longitude"], 4)]
+                    break
+            if got:
+                break
+        cache[name] = got                                 # None is cached too: do not retry forever
+
+    with open("venues.json", "w") as f:
+        json.dump(cache, f, separators=(",", ":"), sort_keys=True)
+    found = sum(1 for v in cache.values() if v)
+    print(f"  venues: {found}/{len(cache)} geocoded")
+    return {k: v for k, v in cache.items() if v}
+
+
 def write_calendars(data):
     """One .ics per club, committed to the repo.
 
@@ -335,6 +388,9 @@ def main():
             if i["tv"]:
                 m["tv"] = i["tv"]
                 tv_n += 1
+            if i.get("v"):
+                m["v"] = i["v"]
+                m["vc"] = i.get("vc", "")
     print(f"  linked {linked}/{len(matches)} to ESPN event ids, {tv_n} with a US broadcaster")
 
     odds = fetch_odds(teams)
@@ -361,7 +417,11 @@ def main():
             m["live"], m["clock"] = True, r["clock"]
             live += 1
 
+    pre = {"matches": matches}
+    venues = geocode_venues(pre)
+
     data = {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "venues": venues,
             "season": SEASON.replace("-", "/"), "teams": teams,
             "paths": {"PL": "eng.1", "UCL": "uefa.champions", "FA": "eng.fa", "EFL": "eng.league_cup"},
             "table": table, "matches": matches}

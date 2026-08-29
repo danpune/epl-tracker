@@ -39,6 +39,11 @@ out; the fetch runs every 30 minutes, so reschedules flow through as they are an
   oEmbed against the channel URL (not the channel *name*: a spoofed name burned the
   sibling World Cup project). Clips stamped with a previous season are rejected, and
   anything unmatched falls back to a YouTube search.
+- **Kickoff weather** — temperature and rain chance at the ground, for matches inside
+  Open-Meteo's ~16-day window. Free, keyless; venues geocoded once into `venues.json`.
+- **Squads** — full club roster, grouped by position, loaded on demand.
+- **Share cards** — a 1200x630 result or fixture card drawn on a canvas in the browser
+  (Web Share on mobile, download on desktop). No dependency, nothing uploaded.
 - **Head to head** — 16 seasons of meetings between the two clubs, on every match.
 - **Dark mode**, and installable to a phone home screen (web manifest).
 - **Top scorers**, built match by match from key events (ESPN's leaders endpoint is
@@ -77,3 +82,7 @@ carries no Premier League markets at all.
 ```bash
 python3 fetch_data.py && python3 test_fetch.py && python3 -m http.server
 ```
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
