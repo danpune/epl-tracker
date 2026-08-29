@@ -112,7 +112,7 @@ footer a{color:var(--acc)}
 </div>
 
 <script>
-var D = null, TEAM = localStorage.getItem('epl.team') || 'manchesterunited', TAB = 'table', showAll = false;
+var D = null, TEAM = localStorage.getItem('epl.team') || 'manchesterunited', TAB = 'table', showAll = false, showPast = false;
 var TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'your timezone';
 var view = document.getElementById('view');
 
@@ -148,54 +148,46 @@ function renderTable(){
 }
 
 /* ---------- fixtures ---------- */
+function matchRow(m){
+  var d = dt(m), mine = (m.h === TEAM || m.a === TEAM);
+  var hw = m.done && m.hs > m['as'], aw = m.done && m['as'] > m.hs;
+  var mid = m.live ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'<div class="clock">'+esc(m.clock||'LIVE')+'</div></div>'
+          : m.done ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'</div>'
+          : '<div class="tm2">'+fTime.format(d)+'</div>';
+  return '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'">'
+    + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
+    + mid
+    + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div>'
+    + '</div>';
+}
+
 function renderFixtures(){
   var all = showAll ? D.matches : D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
-  var now = Date.now(), html = '', lastDay = '';
+  var now = Date.now();
 
-  // Land the user on the next match, not on August.
+  // Land on the next match, not on August — unless the user asked for the whole season.
   var nextIdx = all.findIndex(function(m){ return !m.done && dt(m).getTime() > now - 7200000; });
   if (nextIdx < 0) nextIdx = all.length;
-  var start = Math.max(0, nextIdx - 3);
+  var start = showPast ? 0 : Math.max(0, nextIdx - 3);
 
+  var html = '', lastDay = '';
   all.slice(start).forEach(function(m){
-    var d = dt(m), day = fDay.format(d);
+    var day = fDay.format(dt(m));
     if (day !== lastDay){ html += '<div class="day">'+esc(day)+'</div>'; lastDay = day; }
-    var mine = (m.h === TEAM || m.a === TEAM);
-    var hw = m.done && m.hs > m.as, aw = m.done && m.as > m.hs;
-    var mid = m.live ? '<div class="sc">'+m.hs+'–'+m['as']+'<div class="clock">'+esc(m.clock||'LIVE')+'</div></div>'
-            : m.done ? '<div class="sc">'+m.hs+'–'+m['as']+'</div>'
-            : '<div class="tm2">'+fTime.format(d)+'</div>';
-    html += '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'">'
-      + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
-      + mid
-      + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div>'
-      + '</div>';
+    html += matchRow(m);
   });
 
   view.innerHTML = '<button class="more" id="tog">'
-      + (showAll ? 'Showing all 20 clubs — show only ' + esc(team(TEAM).short) : 'Showing ' + esc(team(TEAM).short) + ' only — show all clubs')
+      + (showAll ? 'Showing all 20 clubs \u2014 show only ' + esc(team(TEAM).short)
+                 : 'Showing ' + esc(team(TEAM).short) + ' only \u2014 show all clubs')
       + '</button>'
-      + (start > 0 ? '<button class="more" id="back">↑ Show earlier matches</button>' : '')
+      + (start > 0 ? '<button class="more" id="past">\u2191 Show earlier matches</button>'
+                   : (showPast && nextIdx > 0 ? '<button class="more" id="past">\u2193 Jump to the next match</button>' : ''))
       + (html || '<p class="sub">No matches.</p>');
+
   document.getElementById('tog').onclick = function(){ showAll = !showAll; renderFixtures(); };
-  var b = document.getElementById('back');
-  if (b) b.onclick = function(){ renderFixtures0(all); };
-}
-function renderFixtures0(all){  // full season, no trimming
-  var html = '', lastDay = '';
-  all.forEach(function(m){
-    var d = dt(m), day = fDay.format(d);
-    if (day !== lastDay){ html += '<div class="day">'+esc(day)+'</div>'; lastDay = day; }
-    var mine = (m.h === TEAM || m.a === TEAM);
-    var hw = m.done && m.hs > m.as, aw = m.done && m.as > m.hs;
-    var mid = m.done ? '<div class="sc">'+m.hs+'–'+m['as']+'</div>' : '<div class="tm2">'+fTime.format(d)+'</div>';
-    html += '<div class="m'+(mine?' me':'')+'">'
-      + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
-      + mid
-      + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div></div>';
-  });
-  view.innerHTML = html;
-  window.scrollTo(0, 0);
+  var b = document.getElementById('past');
+  if (b) b.onclick = function(){ showPast = !showPast; renderFixtures(); window.scrollTo(0, 0); };
 }
 
 /* ---------- kickoff times ---------- */
@@ -260,7 +252,7 @@ fetch('data.json').then(function(r){ return r.json(); }).then(function(d){
   sel.innerHTML = D.table.slice().sort(function(a,b){
       return team(a.t).name.localeCompare(team(b.t).name); })
     .map(function(r){ return '<option value="'+r.t+'"'+(r.t===TEAM?' selected':'')+'>'+esc(team(r.t).name)+'</option>'; }).join('');
-  sel.onchange = function(){ TEAM = sel.value; localStorage.setItem('epl.team', TEAM); showAll = false; render(); };
+  sel.onchange = function(){ TEAM = sel.value; localStorage.setItem('epl.team', TEAM); showAll = false; showPast = false; render(); };
 
   var played = D.matches.filter(function(m){ return m.done; }).length;
   document.getElementById('sub').textContent = D.season + ' season · ' + played + ' of ' + D.matches.length + ' matches played';
