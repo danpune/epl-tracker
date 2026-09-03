@@ -184,7 +184,10 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .formpill{display:inline-flex;gap:2px}
 .formpill i{width:15px;height:15px;border-radius:3px;font-style:normal;font-size:9.5px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center}
 .formpill .fw{background:#137a4a}.formpill .fd{background:#9b93a6}.formpill .fl{background:#c0392b}
-.tv{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:2px 6px;flex:0 0 auto;white-space:nowrap}
+.tv{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);
+  border-radius:5px;padding:2px 6px;white-space:nowrap;flex:0 1 auto;min-width:0;
+  max-width:104px;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:560px){.tv{max-width:56px}}
 .cbadge{font-size:9.5px;letter-spacing:.07em;font-weight:800;text-transform:uppercase;border-radius:4px;padding:2px 5px;background:var(--bg);border:1px solid var(--line);color:var(--muted);flex:0 0 auto}
 .cbadge.ucl{background:#e0e9f7;color:#1a4a8a}.cbadge.fa{background:#fbe8e4;color:#a8341c}.cbadge.efl{background:#e6f0e8;color:#1c6b45}
 .odds{display:flex;gap:1px;margin:0 0 7px;border-radius:0 0 9px 9px;overflow:hidden;height:20px;font-size:10px;font-weight:700}
@@ -236,6 +239,9 @@ footer a{color:var(--club)}
   .hlc,.vcard{padding:10px}
 }
 @media(max-width:560px){
+  .m .go{display:none}          /* decoration; the whole row is already tappable */
+  .m .tv{display:none}          /* shown in the hero and in the match panel instead */
+  .m{gap:7px}
   h1{font-size:24px}
   .hide-s{display:none}
   .m .side span{font-size:13px}
@@ -512,6 +518,8 @@ function renderDetail(m, box){
   var html = '<div class="detail">';
 
   // calendar row — always available, even before a lineup exists
+  if (m.tv) html += '<div class="wx" style="margin-bottom:9px">\ud83d\udcfa <b>'
+                  + esc(m.tv.join(' / ')) + '</b><span class="wsub">US broadcast</span></div>';
   html += '<a class="cal" id="ics-'+m.e+'">＋ Add to calendar (.ics)</a>'
         + '<a class="cal" href="'+esc(gcalLink(m))+'" target="_blank" rel="noopener noreferrer">＋ Google Calendar</a>'
         + '<a class="cal" id="shr-'+m.e+'">↗ Share card</a>'
@@ -639,10 +647,10 @@ var COMP = {UCL:'Champions League', FA:'FA Cup', EFL:'EFL Cup'};
 function matchRow(m){
   var d = dt(m), mine = (m.h === TEAM || m.a === TEAM);
   var hw = m.done && m.hs > m['as'], aw = m.done && m['as'] > m.hs;
+  var hasScore = m.hs != null && m['as'] != null;   // must precede `mid`, which reads it
   var mid = (m.live && hasScore) ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'<div class="clock">'+esc(m.clock||'LIVE')+'</div></div>'
           : (m.done && hasScore) ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'</div>'
           : '<div class="tm2">'+fTime.format(d)+'</div>';
-  var hasScore = m.hs != null && m['as'] != null;
   var badge = m.c && m.c !== 'PL'
     ? '<span class="cbadge '+m.c.toLowerCase()+'" title="'+esc(COMP[m.c]||m.c)+'">'+esc(m.c)+'</span>' : '';
   var row = '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'" data-i="'+m._i+'">'

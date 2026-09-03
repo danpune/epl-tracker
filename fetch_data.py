@@ -254,16 +254,30 @@ def fetch_odds(teams):
     for m in markets:
         events.setdefault(m.get("event_ticker"), []).append(m)
 
+    def cents(m):
+        """Kalshi returns decimal-dollar STRINGS ("0.2500"), not integer cents, and
+        names them *_dollars. Reading the older yes_bid/yes_ask returned None for
+        every market, which looked exactly like an empty order book."""
+        def f(key):
+            v = m.get(key)
+            try:
+                return float(v) * 100 if v not in (None, "") else None
+            except (TypeError, ValueError):
+                return None
+        bid, ask = f("yes_bid_dollars"), f("yes_ask_dollars")
+        if bid is not None and ask is not None:
+            return (bid + ask) / 2                       # mid of the book
+        return bid if bid is not None else ask if ask is not None else f("last_price_dollars")
+
     odds = {}
     for legs in events.values():
-        pick = {}
+        pick, when = {}, ""
         for m in legs:
+            when = when or (m.get("occurrence_datetime") or "")[:10]
             lab = (m.get("yes_sub_title") or "").strip()
-            bid, ask = m.get("yes_bid"), m.get("yes_ask")
-            price = ((bid + ask) / 2 if bid is not None and ask is not None
-                     else bid if bid is not None else ask)
+            price = cents(m)
             if price is None:
-                continue                                 # no quote yet — normal weeks out
+                continue                                 # genuinely no quote yet
             if lab.lower() == "tie":
                 pick["d"] = price
             else:
@@ -274,7 +288,10 @@ def fetch_odds(teams):
                     unmatched.add(lab)
         sides = [k for k in pick if k != "d"]
         if len(sides) == 2 and "d" in pick:
-            odds[frozenset(sides)] = {"sides": pick}
+            # keyed with the DATE as well: the same two clubs meet twice a season and
+            # home advantage is exactly what the price encodes, so the legs must not
+            # share one entry.
+            odds[(frozenset(sides), when)] = {"sides": pick}
     if unmatched:
         print(f"  kalshi: could not map {sorted(unmatched)} — those fixtures get no odds")
     return odds
@@ -425,7 +442,7 @@ def main():
     odds = fetch_odds(teams)
     priced = 0
     for m in matches:
-        o = odds.get(frozenset((m["h"], m["a"])))
+        o = odds.get((frozenset((m["h"], m["a"])), m["utc"][:10]))
         if o and not m.get("done"):
             p = o["sides"]
             if m["h"] in p and m["a"] in p:
