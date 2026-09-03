@@ -128,8 +128,11 @@ def fetch_event_ids():
                 seen = set()
                 tv = [x for x in tv if not (x in seen or seen.add(x))]
                 v = c.get("venue") or {}
-                ids[(key(h["team"]["displayName"]), key(a["team"]["displayName"]))] = {
+                # keyed by competition too: Forest v Leeds happens in BOTH the league
+                # and the EFL Cup, and without this the cup tie inherits the league id
+                ids[("PL", key(h["team"]["displayName"]), key(a["team"]["displayName"]))] = {
                     "e": str(e.get("id", "")), "tv": tv[:3],
+                    "utc": (e.get("date") or "")[:16] + "Z" if e.get("date") else "",
                     "v": v.get("fullName", ""),
                     "vc": ((v.get("address") or {}).get("city") or "")}
     return ids
@@ -151,7 +154,7 @@ def fetch_recent(days=16):
         if not home or not away:
             continue
         hk, ak = key(home["team"]["displayName"]), key(away["team"]["displayName"])
-        out[(hk, ak)] = {
+        out[("PL", hk, ak)] = {
             "hs": int(home["score"]) if str(home.get("score", "")).isdigit() else None,
             "as": int(away["score"]) if str(away.get("score", "")).isdigit() else None,
             "done": bool(st.get("completed")),
@@ -201,7 +204,9 @@ def fetch_cup(code, tag, teams):
                             "abbr": t.get("abbreviation", ""), "id": t.get("id", ""), "logo": logo}
 
         st = (c.get("status") or {}).get("type") or {}
-        num = lambda x: int(x["score"]) if str(x.get("score", "")).isdigit() else None
+        started = st.get("state") != "pre"      # ESPN sends "0" for scheduled matches
+        num = lambda x: (int(x["score"]) if started and str(x.get("score", "")).isdigit()
+                         else None)
         note = next((n.get("headline", "") for n in (c.get("notes") or []) if n.get("headline")), "")
         out.append({"utc": e.get("date", "")[:16].replace(" ", "T") + "Z" if e.get("date") else "",
                     "c": tag, "md": 0, "e": str(e.get("id", "")), "h": hk, "a": ak,
@@ -299,27 +304,43 @@ def geocode_venues(data):
             names[m["v"]] = m.get("vc", "")
 
     for name, city in list(names.items())[:25]:          # a few per run; they persist
-        got = None
-        # try the ground, then a punctuation-stripped form ("St James' Park"), then the
-        # city. City-level is good enough for a forecast — same sky, same rain.
-        plain = re.sub(r"[^\w\s]", "", name).strip()
         # ESPN hyphenates some cities ("Newcastle-upon-Tyne"); the geocoder wants spaces
         city_q = city.replace("-", " ").strip() if city else None
-        for q in (name, plain if plain != name else None, city_q):
+        plain = re.sub(r"[^\w\s]", "", name).strip()
+
+        def lookup(q):
+            """First UK hit for a query. The API ignores its own country= filter, so
+            the country_code check below is what actually constrains it."""
             if not q:
-                continue
+                return None
             try:
                 u = ("https://geocoding-api.open-meteo.com/v1/search?name="
                      + urllib.parse.quote(q) + "&count=5&language=en&country=GB")
                 res = get(u).get("results") or []
             except Exception:
-                res = []
+                return None
             for r in res:
                 if r.get("country_code") in ("GB", "IE"):
-                    got = [round(r["latitude"], 4), round(r["longitude"], 4)]
-                    break
-            if got:
-                break
+                    return [round(r["latitude"], 4), round(r["longitude"], 4)]
+            return None
+
+        # Anchor on the city, then only accept a stadium hit that is near it.
+        # "Stamford Bridge" is also a village in East Yorkshire, 250km from Chelsea;
+        # without this check the ground pins there and the forecast is for nowhere.
+        anchor = lookup(city_q)
+        got = None
+        for q in (name, plain if plain != name else None):
+            hit = lookup(q)
+            if not hit:
+                continue
+            if anchor:
+                dlat = (hit[0] - anchor[0]) * 111.0
+                dlon = (hit[1] - anchor[1]) * 111.0 * 0.63      # cos(53 deg), UK-ish
+                if (dlat * dlat + dlon * dlon) ** 0.5 > 30:     # km from its own city
+                    continue                                     # wrong Stamford Bridge
+            got = hit
+            break
+        got = got or anchor
         cache[name] = got                                 # None is cached too: do not retry forever
 
     with open("venues.json", "w") as f:
@@ -337,10 +358,11 @@ def write_calendars(data):
     """
     os.makedirs("ics", exist_ok=True)
     stamp = data["updated"].replace("-", "").replace(":", "")
-    for k, t in data["teams"].items():
+    league = {r["t"] for r in data["table"]}        # only the 20 clubs; a cup opponent
+    for k, t in data["teams"].items():                 # was getting its own ics file
+        if k not in league:
+            continue
         ms = [m for m in data["matches"] if k in (m["h"], m["a"])]
-        if len(ms) < 5:
-            continue                                   # cup-only opponent, not worth a feed
         out = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//epl-tracker//EN",
                "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
                f"X-WR-CALNAME:{ics_escape(t['name'])} {data['season']}",
@@ -379,19 +401,26 @@ def main():
     matches.sort(key=lambda x: x["utc"])
 
     eids = fetch_event_ids()
-    linked = tv_n = 0
+    linked = tv_n = moved = 0
     for m in matches:
-        i = eids.get((m["h"], m["a"]))
+        i = eids.get((m.get("c", "PL"), m["h"], m["a"]))
         if i:
             m["e"] = i["e"]
             linked += 1
+            # TV moves fixtures and openfootball lags weeks behind; ESPN carries the
+            # real kickoff. Without this the schedule (and every calendar feed) is wrong.
+            if i.get("utc") and i["utc"] != m["utc"]:
+                m["utc"], moved = i["utc"], moved + 1
             if i["tv"]:
                 m["tv"] = i["tv"]
                 tv_n += 1
             if i.get("v"):
                 m["v"] = i["v"]
                 m["vc"] = i.get("vc", "")
-    print(f"  linked {linked}/{len(matches)} to ESPN event ids, {tv_n} with a US broadcaster")
+    print(f"  linked {linked}/{len(matches)} to ESPN event ids, {tv_n} with a US "
+          f"broadcaster, {moved} rescheduled by TV since openfootball published")
+
+    matches.sort(key=lambda x: x["utc"])
 
     odds = fetch_odds(teams)
     priced = 0
@@ -406,9 +435,10 @@ def main():
     recent = fetch_recent()
     live = 0
     for m in matches:
-        r = recent.get((m["h"], m["a"]))
+        r = recent.get((m.get("c", "PL"), m["h"], m["a"]))
         if not r:
-            m["done"] = m["hs"] is not None
+            # never clobber a `done` the source already computed (fetch_cup does)
+            m.setdefault("done", m["hs"] is not None)
             continue
         if r["hs"] is not None:                 # ESPN wins: it is fresher than openfootball
             m["hs"], m["as"] = r["hs"], r["as"]

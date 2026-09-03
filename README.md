@@ -36,7 +36,6 @@ out; the fetch runs every 30 minutes, so reschedules flow through as they are an
 - **Calendar** — one `.ics` for your club's whole season, or a single match, plus
   a Google Calendar link. Built in the browser; there is no backend.
 - **Odds** — Kalshi's market-implied win/draw/win where a market is quoted.
-- **Comments** — GitHub Discussions via giscus, loaded only when that tab is opened.
 - **Highlights** — official Premier League YouTube uploads, each verified through
   oEmbed against the channel URL (not the channel *name*: a spoofed name burned the
   sibling World Cup project). Clips stamped with a previous season are rejected, and

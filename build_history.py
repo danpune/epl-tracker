@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build history.json — head-to-head records between clubs, from 15 seasons of
+"""Build history.json — head-to-head records between clubs, from 16 seasons of
 openfootball (the same CC0 source as the fixture list).
 
 Run rarely: past seasons never change, so this is a one-off that only needs rerunning

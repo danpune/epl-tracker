@@ -10,6 +10,7 @@ Fail-safe: any single match that fails is skipped and retried next run; an exist
 scorers.json is never truncated on failure.
 """
 import json, os, sys, urllib.request
+from datetime import datetime, timedelta, timezone
 
 UA = {"User-Agent": "epl-tracker/1.0 (github.com/danpune/epl-tracker)"}
 PATHS = {"PL": "eng.1", "UCL": "uefa.champions", "FA": "eng.fa", "EFL": "eng.league_cup"}
@@ -31,8 +32,11 @@ def main():
             pass
     seen = prev.get("matches", {})
 
+    now = datetime.now(timezone.utc)
+    stale_before = (now - timedelta(days=1)).strftime("%Y-%m-%dT%H:%MZ")
     todo = [m for m in data["matches"]
-            if m.get("done") and m.get("e") and m["e"] not in seen]
+            if m.get("done") and m.get("e") and m["e"] not in seen
+            and m["utc"] <= now.strftime("%Y-%m-%dT%H:%MZ")]   # never parse the future
     print(f"{len(seen)} matches already parsed, {len(todo)} new")
 
     added = 0
@@ -62,7 +66,11 @@ def main():
                 goals.append({"n": nm, "i": str(a.get("id", "")), "t": team_id,
                               "own": own, "c": m.get("c", "PL")})
                 break
-        seen[m["e"]] = len(goals)
+        # Only bank the result when it is trustworthy. A 0-goal parse on a match that
+        # has not kicked off (or whose events ESPN has not filled in yet) would be
+        # cached forever by this merge-only file, silently losing every real goal.
+        if goals or m["utc"] < stale_before:
+            seen[m["e"]] = len(goals)
         added += len(goals)
 
         for g in goals:

@@ -50,6 +50,12 @@ if os.path.exists("data.json"):
         assert (m["hs"] is None) == (m["as"] is None), "half a scoreline"
     assert set(per_team.values()) == {38}, f"every club plays 38: got {sorted(set(per_team.values()))}"
 
+    # a finished match cannot kick off in the future. This is the check that would
+    # have caught 133 unplayed cup ties being shipped as completed 0-0 draws.
+    future_done = [m for m in d["matches"] if m.get("done") and m["utc"] > d["updated"]]
+    assert not future_done, (f"{len(future_done)} matches marked done with a future "
+                             f"kickoff, e.g. {future_done[0]}")
+
     # every match, cups included, must reference a club the UI can name and draw
     for m in d["matches"]:
         assert m["h"] in d["teams"] and m["a"] in d["teams"], f"unnamed club in {m}"

@@ -11,7 +11,6 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PL Tracker">
-<link rel="preload" href="data.json" as="fetch" crossorigin>
 <style>
 :root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e;
   --club:#3d195b;--club2:#1d1526}
@@ -379,9 +378,10 @@ function icsStamp(d){
   return d.getUTCFullYear() + pad(d.getUTCMonth()+1) + pad(d.getUTCDate()) + 'T'
        + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + '00Z';
 }
+function icsEsc(t){ return String(t).replace(/\\/g,'\\\\').replace(/[,;]/g,'\\$&').replace(/\n/g,' '); }
 function icsFor(list, name){
   var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//epl-tracker//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH',
-               'X-WR-CALNAME:' + name];
+               'X-WR-CALNAME:' + icsEsc(name)];
   list.forEach(function(m){
     var st = dt(m), en = new Date(st.getTime() + 2*60*60*1000);
     var title = team(m.h).name + ' v ' + team(m.a).name + (m.c && m.c !== 'PL' ? ' (' + (COMP[m.c]||m.c) + ')' : '');
@@ -389,8 +389,8 @@ function icsFor(list, name){
       'UID:' + (m.e || (m.h + m.a + m.utc)) + '@epl-tracker',
       'DTSTAMP:' + icsStamp(new Date(D.updated)),
       'DTSTART:' + icsStamp(st), 'DTEND:' + icsStamp(en),
-      'SUMMARY:' + title,
-      'DESCRIPTION:' + (m.c === 'PL' ? 'Premier League matchday ' + m.md : (COMP[m.c]||m.c)),
+      'SUMMARY:' + icsEsc(title),
+      'DESCRIPTION:' + icsEsc(m.c === 'PL' ? 'Premier League matchday ' + m.md : (COMP[m.c]||m.c)),
       'END:VEVENT');
   });
   lines.push('END:VCALENDAR');
@@ -413,14 +413,16 @@ function gcalLink(m){
 /* ---------- head-to-head, from 16 seasons of openfootball ---------- */
 // 78KB, and only ever wanted once a match is opened — so it is fetched on first use,
 // never on page load.
-var histWanted = false;
+var histWanted = false, histQueue = [];
 function loadHistory(then){
   if (HIST){ then(); return; }
+  histQueue.push(then);              // queue, don't drop: a second caller was losing its callback
   if (histWanted) return;
   histWanted = true;
+  function drain(){ var q = histQueue; histQueue = []; q.forEach(function(f){ f(); }); }
   getJSON('history.json').then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(j){ HIST = j || {pairs:{}}; then(); })
-    .catch(function(){ HIST = {pairs:{}}; then(); });
+    .then(function(j){ HIST = j || {pairs:{}}; drain(); })
+    .catch(function(){ HIST = {pairs:{}}; drain(); });
 }
 
 function h2hBlock(m){
@@ -614,11 +616,6 @@ function renderDetail(m, box){
   var sq = document.getElementById('sqh-'+m.e);
   if (sq) sq.onclick = function(e){ e.stopPropagation(); openSquad(m.h === TEAM ? m.a : m.h); };
 
-  var sb = document.getElementById('shr-'+m.e);
-  if (sb) sb.onclick = function(e){ e.stopPropagation(); shareCard(m); };
-  var sq = document.getElementById('sqh-'+m.e);
-  if (sq) sq.onclick = function(e){ e.stopPropagation(); openSquad(m.h === TEAM ? m.a : m.h); };
-
   var btn = document.getElementById('ics-'+m.e);
   if (btn) btn.onclick = function(){
     downloadICS([m], team(m.h).short+' v '+team(m.a).short, 'match.ics');
@@ -627,12 +624,12 @@ function renderDetail(m, box){
 
 function openDetail(m, box){
   if (!m.e){ box.innerHTML = '<div class="detail">No match detail available for this fixture yet.</div>'; return; }
-  loadHistory(function(){ if (box.parentNode) renderDetail(m, box); });
   renderDetail(m, box);
+  if (!HIST) loadHistory(function(){ if (box.parentNode) renderDetail(m, box); });
   if (detailCache[m.e]) return;
   var path = (D.paths || {})[m.c || 'PL'] || 'eng.1';
   getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/'+path+'/summary?event='+encodeURIComponent(m.e))
-    .then(function(r){ return r.json(); })
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(j){ detailCache[m.e] = j; renderDetail(m, box); })
     .catch(function(){ detailCache[m.e] = 'error'; renderDetail(m, box); });
 }
@@ -642,9 +639,10 @@ var COMP = {UCL:'Champions League', FA:'FA Cup', EFL:'EFL Cup'};
 function matchRow(m){
   var d = dt(m), mine = (m.h === TEAM || m.a === TEAM);
   var hw = m.done && m.hs > m['as'], aw = m.done && m['as'] > m.hs;
-  var mid = m.live ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'<div class="clock">'+esc(m.clock||'LIVE')+'</div></div>'
-          : m.done ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'</div>'
+  var mid = (m.live && hasScore) ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'<div class="clock">'+esc(m.clock||'LIVE')+'</div></div>'
+          : (m.done && hasScore) ? '<div class="sc">'+m.hs+'\u2013'+m['as']+'</div>'
           : '<div class="tm2">'+fTime.format(d)+'</div>';
+  var hasScore = m.hs != null && m['as'] != null;
   var badge = m.c && m.c !== 'PL'
     ? '<span class="cbadge '+m.c.toLowerCase()+'" title="'+esc(COMP[m.c]||m.c)+'">'+esc(m.c)+'</span>' : '';
   var row = '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'" data-i="'+m._i+'">'
@@ -823,11 +821,12 @@ function renderHero(){
     + '<button class="go2" id="heroGo" aria-label="Open this match"></button>'
     + '</div>';
 
+  var wxHost = el.querySelector('.tag');
   loadWx(next, function(w){
-    if (!w) return;
-    var tag = el.querySelector('.tag');
+    // the hero may have been re-rendered for a different club while this was in flight
+    if (!w || !wxHost || !wxHost.isConnected) return;
     var d = WXC[w.c] || ['', '\ud83c\udf21\ufe0f'];
-    if (tag) tag.insertAdjacentHTML('afterend',
+    wxHost.insertAdjacentHTML('afterend',
       '<span class="wxh">'+d[1]+' '+w.t+'\u00b0C \u00b7 '+w.p+'% rain at kickoff</span>');
   });
 
@@ -1034,7 +1033,7 @@ function renderHighlights(){
     return;
   }
   var done = D.matches.filter(function(m){ return m.done && hlFor(m); })
-                      .sort(function(a, b){ return a.utc < b.utc ? 1 : -1; });
+                      .sort(function(a, b){ return a.utc < b.utc ? 1 : a.utc > b.utc ? -1 : 0; });
   if (!done.length){
     view.innerHTML = '<div class="saybox"><b>No official video yet.</b>'
       + '<div class="fine">Clips appear here as the Premier League posts them after each match. '
@@ -1066,6 +1065,7 @@ function renderHighlights(){
 
 /* ---------- shell ---------- */
 function render(){
+  view.onclick = null;          // drop the previous tab's delegated handler
   renderHero();
   if (TAB === 'table') renderTable();
   else if (TAB === 'fix') renderFixtures();
@@ -1091,7 +1091,7 @@ function getJSON(path){
 
 getJSON('highlights.json').then(function(r){ return r.ok ? r.json() : null; })
   .then(function(j){ HL = (j && j.highlights) || {}; if (D) render(); })
-  .catch(function(){ HL = {}; });
+  .catch(function(){ HL = {}; if (D) render(); });
 
 getJSON('scorers.json').then(function(r){ return r.ok ? r.json() : null; })
   .then(function(s){ SCORERS = s; if (D && TAB === 'table') render(); })
@@ -1100,7 +1100,12 @@ getJSON('scorers.json').then(function(r){ return r.ok ? r.json() : null; })
 getJSON('data.json').then(function(r){ return r.json(); }).then(function(d){
   D = d;
   var sel = document.getElementById('team');
-  if (!D.teams[TEAM]) TEAM = D.table[0].t;
+  // validate against the TABLE, not the team map — the map also holds cup opponents,
+  // so a relegated club passes and the picker then has no matching option
+  if (!D.table.some(function(r){ return r.t === TEAM; })){
+    TEAM = D.table[0].t;
+    try { localStorage.setItem('epl.team', TEAM); } catch (e) {}
+  }
   sel.innerHTML = D.table.slice().sort(function(a,b){
       return team(a.t).name.localeCompare(team(b.t).name); })
     .map(function(r){ return '<option value="'+r.t+'"'+(r.t===TEAM?' selected':'')+'>'+esc(team(r.t).name)+'</option>'; }).join('');

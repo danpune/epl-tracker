@@ -57,7 +57,7 @@ def verify(vid):
 
 # A title naming both clubs is not enough: the channel also posts last season's
 # drama and all-time compilations, which would attach the wrong video to a fixture.
-OLD_SEASON = re.compile(r"\b(?:19|20)?(\d\d)\s*[/-]\s*(\d\d)\b")
+OLD_SEASON = re.compile(r"\b(?:19|20)?(\d\d)\s*/\s*(\d\d)\b")  # only a/b season form, not "15-16 August"
 COMPILATION = re.compile(r"\b(great|incredible|best|greatest|classic|iconic|shocking|"
                          r"unforgettable|record|ever|all[- ]time|underdog|top \d+|\d+ goals)\b")
 
