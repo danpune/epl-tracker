@@ -148,10 +148,13 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .ovl{position:fixed;inset:0;background:rgba(14,8,18,.88);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
 .ovl .box{width:min(900px,96vw)}
 .ovl .bh{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;font-size:15px;margin-bottom:9px;gap:12px}
-.ovl .bh button{background:none;border:0;color:#fff;font-size:26px;cursor:pointer;line-height:1;padding:0 4px}
+.ovl .bh button{background:none;border:0;color:#fff;font-size:26px;cursor:pointer;line-height:1;
+  min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;margin:-8px -8px -8px 0}
 .ovl .fr{aspect-ratio:16/9;width:100%}
 .ovl iframe{width:100%;height:100%;border:0;border-radius:12px;background:#000}
-.playbtn{border:0;background:none;color:var(--club);font-size:15px;cursor:pointer;padding:2px 4px;flex:0 0 auto}
+.playbtn{border:0;background:none;color:var(--club);font-size:15px;cursor:pointer;
+  flex:0 0 auto;min-width:44px;min-height:44px;margin:-8px -6px -8px 0;
+  display:inline-flex;align-items:center;justify-content:center}
 .wx{display:inline-flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line);
   border-radius:9px;padding:6px 11px;font-size:13px;margin:0 0 9px}
 .wx b{font-weight:800}
@@ -224,6 +227,14 @@ footer a{color:var(--club)}
   .hero .sep{align-self:flex-start;margin-left:2px;opacity:.55}
   .hero .cd{grid-template-columns:repeat(4,1fr);gap:6px}
   .hero .cd b{font-size:19px}
+}
+@media(pointer:coarse),(max-width:560px){
+  /* 44px minimum touch target — measured 34px tabs / 32px buttons before this */
+  nav button{min-height:44px;padding:10px 16px}
+  .picker select{min-height:44px}
+  .cal{min-height:44px;display:inline-flex;align-items:center;padding:0 13px}
+  .more{min-height:48px}
+  .hlc,.vcard{padding:10px}
 }
 @media(max-width:560px){
   h1{font-size:24px}
@@ -407,7 +418,7 @@ function loadHistory(then){
   if (HIST){ then(); return; }
   if (histWanted) return;
   histWanted = true;
-  fetch('history.json').then(function(r){ return r.ok ? r.json() : null; })
+  getJSON('history.json').then(function(r){ return r.ok ? r.json() : null; })
     .then(function(j){ HIST = j || {pairs:{}}; then(); })
     .catch(function(){ HIST = {pairs:{}}; then(); });
 }
@@ -620,7 +631,7 @@ function openDetail(m, box){
   renderDetail(m, box);
   if (detailCache[m.e]) return;
   var path = (D.paths || {})[m.c || 'PL'] || 'eng.1';
-  fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/'+path+'/summary?event='+encodeURIComponent(m.e))
+  getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/'+path+'/summary?event='+encodeURIComponent(m.e))
     .then(function(r){ return r.json(); })
     .then(function(j){ detailCache[m.e] = j; renderDetail(m, box); })
     .catch(function(){ detailCache[m.e] = 'error'; renderDetail(m, box); });
@@ -1070,15 +1081,23 @@ document.querySelectorAll('nav button').forEach(function(b){
   };
 });
 
-fetch('highlights.json').then(function(r){ return r.ok ? r.json() : null; })
+// Data files are rewritten every ~30 minutes. Without this a returning visitor is
+// served yesterday's scores out of the browser cache. ?t= defeats proxies that
+// ignore no-store.
+function getJSON(path){
+  return fetch(path + (path.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now(),
+               {cache: 'no-store'});
+}
+
+getJSON('highlights.json').then(function(r){ return r.ok ? r.json() : null; })
   .then(function(j){ HL = (j && j.highlights) || {}; if (D) render(); })
   .catch(function(){ HL = {}; });
 
-fetch('scorers.json').then(function(r){ return r.ok ? r.json() : null; })
+getJSON('scorers.json').then(function(r){ return r.ok ? r.json() : null; })
   .then(function(s){ SCORERS = s; if (D && TAB === 'table') render(); })
   .catch(function(){});
 
-fetch('data.json').then(function(r){ return r.json(); }).then(function(d){
+getJSON('data.json').then(function(r){ return r.json(); }).then(function(d){
   D = d;
   var sel = document.getElementById('team');
   if (!D.teams[TEAM]) TEAM = D.table[0].t;
