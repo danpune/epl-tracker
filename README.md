@@ -15,6 +15,22 @@ Static site, no build step, no API key, no database. Runs on GitHub Pages for $0
 The schedule source is public domain; the table source is free and unauthenticated.
 Nothing here depends on a paid tier that can lapse.
 
+## How often it actually updates
+
+Two different clocks, deliberately:
+
+- **Live scores** are fetched by the page itself, straight from ESPN, roughly once a
+  minute while a match is in play (and not at all when nothing is on). They do not
+  wait for a build.
+- **Everything else** — table, fixtures, scorers, highlights, calendars — comes from
+  the scheduled workflow.
+
+The workflow's cron asks for every 30 minutes. **GitHub does not honour that**: it
+deprioritises scheduled runs on low-traffic repos and in practice fires this one every
+~3.4 hours (measured median over two days; the odd-minute `:13/:43` trick is already
+applied and is not enough). That cadence is fine for a fixture list and a league table,
+and it is exactly why live scores are fetched client-side instead.
+
 ## Timezone handling
 
 openfootball publishes bare UK local times (`"15:00"`) with no offset, so they are

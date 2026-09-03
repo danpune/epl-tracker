@@ -659,7 +659,8 @@ function matchRow(m){
   var row = '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'" data-i="'+m._i+'">'
     + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
     + mid
-    + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+badge+'</div>'
+    + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div>'
+    + badge
     + (m.tv ? '<div class="tv" title="US broadcast">'+esc(m.tv.join(' / '))+'</div>' : '')
     + (m.done ? '<button class="playbtn" data-play="'+m._i+'" title="'
         +(hlFor(m) ? 'Play official video' : 'Search YouTube for highlights')+'">\u25b6</button>' : '')
@@ -892,6 +893,12 @@ function renderAbout(){
   + '</div>'
   + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Caveats</h4>'
   + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
+  +   '<b>How often it updates:</b> scores refresh in your browser straight from ESPN while '
+  +   'matches are on — about once a minute during a game — so they do not wait on the '
+  +   'build. The table, fixtures and calendars come from a scheduled job that asks for '
+  +   'every 30 minutes; GitHub throttles scheduled jobs on small projects and in practice '
+  +   'runs it every few hours. That is fine for a schedule, which is why live scores are '
+  +   'fetched separately.<br><br>'
   +   'Later fixtures are provisional — broadcasters move matches about five weeks out, so subscribe '
   +   'to the calendar rather than downloading it once. Full match highlights are rights-restricted; '
   +   'the video shown is ESPN\'s own. Odds are informational, not betting advice. '
@@ -1074,6 +1081,68 @@ function renderHighlights(){
   };
 }
 
+/* ---------- live scores, straight from ESPN ---------- */
+// GitHub throttles scheduled workflows on low-traffic repos: the cron asks for every
+// 30 minutes and actually gets ~3.4 hours. That is fine for fixtures and the table,
+// but it is not live. ESPN's scoreboard is CORS-open, so on match days the page
+// refreshes scores itself and does not wait for the next commit.
+var liveTimer = null;
+
+function liveWindow(){
+  var now = Date.now(), comps = {};
+  D.matches.forEach(function(m){
+    var t = dt(m).getTime();
+    if (t > now - 4 * 3600e3 && t < now + 3600e3) comps[m.c || 'PL'] = true;   // in play or imminent
+  });
+  return Object.keys(comps);
+}
+
+function applyLive(events){
+  var byId = {}, changed = false;
+  D.matches.forEach(function(m){ if (m.e) byId[m.e] = m; });
+  events.forEach(function(e){
+    var m = byId[String(e.id || '')];
+    if (!m) return;
+    var c = (e.competitions || [{}])[0], st = (c.status || {}).type || {};
+    var cs = c.competitors || [];
+    var home = cs.filter(function(x){ return x.homeAway === 'home'; })[0];
+    var away = cs.filter(function(x){ return x.homeAway === 'away'; })[0];
+    if (!home || !away || st.state === 'pre') return;          // never trust a pre-match "0"
+    var hs = /^\d+$/.test(String(home.score)) ? +home.score : null;
+    var as = /^\d+$/.test(String(away.score)) ? +away.score : null;
+    var live = st.state === 'in', done = !!st.completed;
+    var clock = live ? (st.shortDetail || '') : '';
+    if (m.hs !== hs || m['as'] !== as || !!m.live !== live || !!m.done !== done || m.clock !== clock){
+      m.hs = hs; m['as'] = as; m.done = done; m.clock = clock;
+      if (live) m.live = true; else delete m.live;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function pollLive(){
+  var comps = liveWindow();
+  if (!comps.length){ liveTimer = setTimeout(pollLive, 15 * 60e3); return; }   // nothing on; check back later
+  var day = function(off){
+    var d = new Date(Date.now() + off * 86400e3);
+    return d.getUTCFullYear() + ('0'+(d.getUTCMonth()+1)).slice(-2) + ('0'+d.getUTCDate()).slice(-2);
+  };
+  var range = day(-1) + '-' + day(1);                       // covers every timezone edge
+  Promise.all(comps.map(function(c){
+    var path = (D.paths || {})[c] || 'eng.1';
+    return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/'+path+'/scoreboard?dates='+range+'&limit=200')
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ return (j && j.events) || []; })
+      .catch(function(){ return []; });
+  })).then(function(lists){
+    var evs = lists.reduce(function(a, b){ return a.concat(b); }, []);
+    if (applyLive(evs)) render();
+    var anyLive = D.matches.some(function(m){ return m.live; });
+    liveTimer = setTimeout(pollLive, anyLive ? 60e3 : 5 * 60e3);
+  });
+}
+
 /* ---------- shell ---------- */
 function render(){
   view.onclick = null;          // drop the previous tab's delegated handler
@@ -1129,6 +1198,7 @@ getJSON('data.json').then(function(r){ return r.json(); }).then(function(d){
   document.getElementById('tz').textContent = 'Times in ' + TZ;
   document.getElementById('upd').textContent = 'Updated ' + new Date(D.updated).toLocaleString();
   render();
+  pollLive();
 }).catch(function(e){
   view.innerHTML = '<div class="err"><b>Could not load the data.</b><br>'+esc(e.message)+'</div>';
 });
