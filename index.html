@@ -601,15 +601,18 @@ function renderDetail(m, box){
   box.innerHTML = html;
 
   // click a thumbnail -> play inline, falling back to ESPN's page if the file will not stream
+  // never hand window.open a URL from a feed without checking the scheme
+  function safeOpen(u){ if (/^https?:\/\//i.test(u || '')) window.open(u, '_blank', 'noopener'); }
   [].slice.call(box.querySelectorAll('.vcard')).forEach(function(card){
     card.onclick = function(ev){
       ev.stopPropagation();
       var src = card.dataset.src, web = card.dataset.web;
       if (card.querySelector('video')) return;
-      if (!src){ if (web) window.open(web, '_blank', 'noopener'); return; }
+      if (!src){ safeOpen(web); return; }
+      if (!/^https?:\/\//i.test(src)) { safeOpen(web); return; }
       var v = document.createElement('video');
       v.src = src; v.controls = true; v.autoplay = true; v.className = 'vplay'; v.playsInline = true;
-      v.onerror = function(){ if (web) window.open(web, '_blank', 'noopener'); };
+      v.onerror = function(){ safeOpen(web); };
       card.appendChild(v);
     };
   });
