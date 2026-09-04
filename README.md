@@ -100,6 +100,18 @@ carries no Premier League markets at all.
 python3 fetch_data.py && python3 test_fetch.py && python3 -m http.server
 ```
 
+## The share card
+
+`make_preview.py` renders `preview.jpg` (1200x630) from the live `data.json`, so a link
+pasted into WhatsApp, iMessage or Slack shows the **current table and matchday** rather
+than a logo. ESPN, BBC Sport, FotMob and the Premier League's own site all share a
+static image (the PL site sets no `og:image` at all) — this one is regenerated on every
+data update.
+
+Note `og:image` must be an absolute `https://` URL; a relative path renders no card.
+Chat apps also cache aggressively, so an already-shared link keeps its old preview until
+their scraper refetches.
+
 ## Licence
 
 MIT — see [LICENSE](LICENSE).

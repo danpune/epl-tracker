@@ -36,6 +36,9 @@ jobs:
       - name: Refresh head-to-head (past seasons never change; cheap to keep current)
         run: python build_history.py || true
 
+      - name: Refresh the link-preview card (shows the live table)
+        run: pip install --quiet Pillow && python make_preview.py || true
+
       - name: Self-check
         run: python test_fetch.py
 
@@ -43,6 +46,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data.json scorers.json highlights.json history.json venues.json ics/
+          git add data.json scorers.json highlights.json history.json venues.json preview.jpg ics/
           git diff --staged --quiet || git commit -m "auto-update data $(date -u +%Y-%m-%dT%H:%MZ)"
           git push
