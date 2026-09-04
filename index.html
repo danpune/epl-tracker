@@ -1263,8 +1263,8 @@ function renderSeason(){
   var t = team(TEAM);
   var fmt = new Intl.DateTimeFormat([], {day:'numeric', month:'short', year:'numeric'});
   var left = monthsLeft <= 0 ? 'season over'
-           : monthsLeft < 1 ? Math.max(1, Math.round(monthsLeft * 30.44)) + ' days to go'
-           : monthsLeft.toFixed(1).replace(/\.0$/, '') + ' months to go';
+           : monthsLeft < 1 ? Math.max(1, Math.round(monthsLeft * 30.44)) + ' days remaining'
+           : monthsLeft.toFixed(1).replace(/\.0$/, '') + ' months remaining';
 
   el.innerHTML = '<div class="season">'
     + '<div class="sl"><span>Season <b>' + esc(fmt.format(first)) + '</b> \u2192 <b>'
@@ -1272,9 +1272,10 @@ function renderSeason(){
     +   '<span>' + esc(left) + '</span></div>'
     + '<div class="track"><div class="fill" style="width:' + pct.toFixed(1) + '%"></div></div>'
     + '<div class="foot">'
-    +   '<span><b>' + minePlayed + ' of ' + mine.length + '</b> ' + esc(t.short)
-    +     ' matches played \u00b7 <b>' + (mine.length - minePlayed) + '</b> to go</span>'
-    +   '<span>league: ' + playedLg + ' of ' + lg.length + '</span>'
+    +   '<span>' + esc(t.short) + ' have played <b>' + minePlayed + '</b> of <b>'
+    +     mine.length + '</b> matches \u00b7 <b>' + (mine.length - minePlayed)
+    +     '</b> matches left</span>'
+    +   '<span>league: ' + playedLg + ' of ' + lg.length + ' played</span>'
     + '</div></div>';
 }
 
