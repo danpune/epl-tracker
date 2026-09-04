@@ -15,13 +15,8 @@
 :root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e;
   --club:#3d195b;--club2:#1d1526}
 @media (prefers-color-scheme: dark){
-  :root{--bg:#141019;--card:#1e1826;--line:#312a3b;--text:#efeaf4;--muted:#a79fb2;--live:#ff6b52;--good:#3fbc80}
-  tr.me td{background:color-mix(in srgb,var(--club) 26%,#1e1826)}
-  .m:hover,.hlc:hover,.vcard:hover{border-color:var(--club)}
-  .sbar .t{background:#2a2333}
-  .bar .t{background:#2a2333}
-  .formpill .fd{background:#6b6377}
-  img[src*="teamlogos"]{filter:none}
+  :root{--bg:#141019;--card:#1e1826;--line:#312a3b;--text:#efeaf4;--muted:#a79fb2;--live:#ff6b52;--good:#3fbc80;
+        --acc:#c9a6ff}
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -113,6 +108,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .m .w{font-weight:800}
 .m .clock{color:var(--live);font-size:11px;font-weight:700}
 .m{cursor:pointer}
+:focus-visible{outline:2px solid var(--club);outline-offset:2px;border-radius:8px}
 .m .go{color:var(--muted);font-size:11px;flex:0 0 auto;width:12px;text-align:center}
 .cal{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;color:var(--text);text-decoration:none;background:var(--card);cursor:pointer;margin:0 6px 8px 0}
 .cal:hover{border-color:var(--club);color:var(--text)}
@@ -235,6 +231,7 @@ footer a{color:var(--club)}
   nav button{min-height:44px;padding:10px 16px}
   .picker select{min-height:44px}
   .cal{min-height:44px;display:inline-flex;align-items:center;padding:0 13px}
+  .clubcell{min-height:44px}
   .more{min-height:48px}
   .hlc,.vcard{padding:10px}
 }
@@ -246,6 +243,16 @@ footer a{color:var(--club)}
   .hide-s{display:none}
   .m .side span{font-size:13px}
   .picker .tz{margin-left:0;width:100%}
+}
+/* Dark-mode component overrides live HERE, after the rules they override.
+   Declared earlier they lose the cascade at equal specificity — that is how the
+   followed club's table row ended up white text on a near-white background. */
+@media (prefers-color-scheme: dark){
+  tr.me td{background:color-mix(in srgb,var(--club) 26%,#1e1826)}
+  .sbar .t,.bar .t{background:#2a2333}
+  .formpill .fd{background:#6b6377}
+  .cbadge{background:#241d2e}
+  .wx,.tv{background:#241d2e}
 }
 </style>
 </head>
@@ -354,7 +361,8 @@ function renderTable(){
     else if (r.rank >= 18) cls.push('rel');
     return '<tr class="'+cls.join(' ')+'">'
       + '<td>'+r.rank+'</td>'
-      + '<td><div class="tm clubcell" data-squad="'+esc(r.t)+'" title="See the squad">'
+      + '<td><div class="tm clubcell" data-squad="'+esc(r.t)+'" title="See the squad"'
+      +   ' tabindex="0" role="button" aria-label="'+esc(t.name)+' squad">'
       +   crest(r.t)+'<span>'+esc(t.short)+'</span></div></td>'
       + '<td>'+r.pld+'</td>'
       + '<td class="hide-s">'+r.w+'</td><td class="hide-s">'+r.d+'</td><td class="hide-s">'+r.l+'</td>'
@@ -656,11 +664,13 @@ function matchRow(m){
           : '<div class="tm2">'+fTime.format(d)+'</div>';
   var badge = m.c && m.c !== 'PL'
     ? '<span class="cbadge '+m.c.toLowerCase()+'" title="'+esc(COMP[m.c]||m.c)+'">'+esc(m.c)+'</span>' : '';
-  var row = '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'" data-i="'+m._i+'">'
+  var row = '<div class="m'+(mine?' me':'')+(m.live?' live':'')+'" data-i="'+m._i+'"'
+    + ' tabindex="0" role="button" aria-label="'+esc(team(m.h).short+' versus '+team(m.a).short)+'">'
     + '<div class="side'+(hw?' w':'')+'">'+crest(m.h)+'<span>'+esc(team(m.h).short)+'</span></div>'
     + mid
     + '<div class="side a'+(aw?' w':'')+'"><span>'+esc(team(m.a).short)+'</span>'+crest(m.a)+'</div>'
     + badge
+    + (m.note ? '<div class="tv" title="'+esc(m.note)+'">'+esc(m.note.replace(/ on penalties$/, ' on pens'))+'</div>' : '')
     + (m.tv ? '<div class="tv" title="US broadcast">'+esc(m.tv.join(' / '))+'</div>' : '')
     + (m.done ? '<button class="playbtn" data-play="'+m._i+'" title="'
         +(hlFor(m) ? 'Play official video' : 'Search YouTube for highlights')+'">\u25b6</button>' : '')
@@ -800,10 +810,41 @@ function streakText(k){
           L:n+' straight defeats.'}[last] || '';
 }
 
+// ESPN gives Spurs, Fulham and Leeds a primary colour of #ffffff. --club is painted
+// behind white text (tabs, scorer counts, the hero gradient), so those clubs rendered
+// white-on-white at 1.00:1 — the page effectively vanished. Pick a colour that white
+// can sit on: the club's own alternate if it is dark enough, else darken the primary.
+function readableClub(col, alt){
+  function lum(c){
+    c = String(c || '').replace('#', '');
+    if (c.length !== 6) return null;
+    var v = [0, 2, 4].map(function(i){
+      var x = parseInt(c.substr(i, 2), 16) / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+  function contrastOnWhiteText(c){ var L = lum(c); return L == null ? 0 : 1.05 / (L + 0.05); }
+  if (contrastOnWhiteText(col) >= 3) return col;                 // fine as-is
+  var c = String(col || '').replace('#', '');
+  if (c.length !== 6) return contrastOnWhiteText(alt) >= 3 ? alt : '#3d195b';
+  var ch = [0, 2, 4].map(function(i){ return parseInt(c.substr(i, 2), 16); });
+  var sat = Math.max.apply(null, ch) - Math.min.apply(null, ch);
+  // If the club actually has a hue, darken THEIR colour — City stays sky blue rather
+  // than turning black. Only a white/grey primary (Spurs, Fulham) falls back to the
+  // alternate, which is the club's real second colour.
+  if (sat < 25 && contrastOnWhiteText(alt) >= 3) return alt;
+  for (var f = 0.6; f > 0.15; f -= 0.1){
+    var d = '#' + ch.map(function(v){ return ('0' + Math.round(v * f).toString(16)).slice(-2); }).join('');
+    if (contrastOnWhiteText(d) >= 3) return d;
+  }
+  return contrastOnWhiteText(alt) >= 3 ? alt : '#3d195b';
+}
+
 function renderHero(){
   var el = document.getElementById('hero');
   var t = team(TEAM);
-  document.documentElement.style.setProperty('--club', t.col || '#3d195b');
+  document.documentElement.style.setProperty('--club', readableClub(t.col, t.col2));
   document.documentElement.style.setProperty('--club2', t.col2 || '#1d1526');
 
   var now = Date.now();
@@ -957,14 +998,15 @@ function openSquad(k){
 
   if (squadCache[k]){ draw(squadCache[k]); return; }
   if (!t.id){ draw(null); return; }
-  fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams/'+t.id+'/roster')
-    .then(function(r){ return r.json(); })
+  getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/teams/'+t.id+'/roster')
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(j){
       var a = j.athletes || [];
       var list = (a.length && a[0] && a[0].items) ? a.reduce(function(acc, g){ return acc.concat(g.items || []); }, []) : a;
       squadCache[k] = list; draw(list);
     })
-    .catch(function(){ draw(null); });
+    .catch(function(){ body('<p class="sub" style="margin:0">Couldn\u2019t load the squad \u2014 '
+      + 'that\u2019s a network problem, not an empty squad. Try again in a moment.</p>'); });
 }
 
 /* ---------- share card: drawn in a canvas, nothing uploaded ---------- */
@@ -1053,6 +1095,11 @@ function renderHighlights(){
   var done = D.matches.filter(function(m){ return m.done && hlFor(m); })
                       .sort(function(a, b){ return a.utc < b.utc ? 1 : a.utc > b.utc ? -1 : 0; });
   if (!done.length){
+    if (HL.__failed){
+      view.innerHTML = '<div class="saybox"><b>Couldn\u2019t load the highlights list.</b>'
+        + '<div class="fine">That\u2019s a network problem, not an empty list. Reload to try again.</div></div>';
+      return;
+    }
     view.innerHTML = '<div class="saybox"><b>No official video yet.</b>'
       + '<div class="fine">Clips appear here as the Premier League posts them after each match. '
       + 'In the meantime, any finished match has a \u25b6 that opens a YouTube search.</div></div>';
@@ -1062,7 +1109,8 @@ function renderHighlights(){
   done.forEach(function(m){
     var h = hlFor(m), day = fDay.format(dt(m));
     if (day !== lastDay){ html += '<div class="hlday">'+esc(day)+'</div>'; lastDay = day; }
-    html += '<div class="hlc" data-i="'+m._i+'">'
+    html += '<div class="hlc" data-i="'+m._i+'" tabindex="0" role="button" aria-label="'
+      + esc('Play video: '+team(m.h).short+' '+m.hs+'-'+m['as']+' '+team(m.a).short)+'">'
       + '<div class="hlthumb"><img loading="lazy" src="https://i.ytimg.com/vi/'+esc(h.yt)+'/hqdefault.jpg" alt="">'
       +   '<span class="hlplay">\u25b6</span></div>'
       + '<div class="hls">'+crest(m.h)+'<span>'+esc(team(m.h).short)+' '+m.hs+'\u2013'+m['as']+' '
@@ -1092,7 +1140,9 @@ function liveWindow(){
   var now = Date.now(), comps = {};
   D.matches.forEach(function(m){
     var t = dt(m).getTime();
-    if (t > now - 4 * 3600e3 && t < now + 3600e3) comps[m.c || 'PL'] = true;   // in play or imminent
+    // `|| m.live` is what makes this self-healing: a stale live flag from an older
+    // commit keeps its competition in the poll set until ESPN says the match is over.
+    if ((t > now - 4 * 3600e3 && t < now + 3600e3) || m.live) comps[m.c || 'PL'] = true;
   });
   return Object.keys(comps);
 }
@@ -1137,11 +1187,36 @@ function pollLive(){
       .catch(function(){ return []; });
   })).then(function(lists){
     var evs = lists.reduce(function(a, b){ return a.concat(b); }, []);
-    if (applyLive(evs)) render();
+    if (applyLive(evs)){
+      // keep the open match panel across the refresh — the detail is cached, so
+      // reopening is instant, and losing it every 60s during a match is the worst
+      // possible moment to lose it.
+      var openRow = view.querySelector('.detailbox');
+      var openIdx = openRow && openRow.previousSibling
+                  ? (openRow.previousSibling.querySelector
+                      ? (openRow.previousSibling.querySelector('.m') || openRow.previousSibling).dataset.i
+                      : null)
+                  : null;
+      render();
+      if (openIdx != null){
+        var row = view.querySelector('.m[data-i="' + openIdx + '"]');
+        if (row) row.click();
+      }
+    }
     var anyLive = D.matches.some(function(m){ return m.live; });
     liveTimer = setTimeout(pollLive, anyLive ? 60e3 : 5 * 60e3);
+  }).catch(function(){
+    liveTimer = setTimeout(pollLive, 60e3);      // never let one throw end live scores
   });
 }
+
+// Enter/Space activate anything we made role="button" — one listener for all of them.
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var t = e.target;
+  if (!t || !t.closest) return;
+  if (t.closest('.m,[data-squad],.hlc')){ e.preventDefault(); t.click(); }
+});
 
 /* ---------- shell ---------- */
 function render(){
@@ -1171,7 +1246,7 @@ function getJSON(path){
 
 getJSON('highlights.json').then(function(r){ return r.ok ? r.json() : null; })
   .then(function(j){ HL = (j && j.highlights) || {}; if (D) render(); })
-  .catch(function(){ HL = {}; if (D) render(); });
+  .catch(function(){ HL = {}; HL.__failed = true; if (D) render(); });
 
 getJSON('scorers.json').then(function(r){ return r.ok ? r.json() : null; })
   .then(function(s){ SCORERS = s; if (D && TAB === 'table') render(); })
@@ -1200,7 +1275,13 @@ getJSON('data.json').then(function(r){ return r.json(); }).then(function(d){
   render();
   pollLive();
 }).catch(function(e){
-  view.innerHTML = '<div class="err"><b>Could not load the data.</b><br>'+esc(e.message)+'</div>';
+  document.getElementById('sub').textContent = '';
+  document.querySelector('.picker').style.display = 'none';
+  document.getElementById('hero').innerHTML = '';
+  view.innerHTML = '<div class="err"><b>Could not load the data.</b><br>'
+    + 'The site\u2019s data file didn\u2019t load. Reload the page \u2014 if it keeps happening the '
+    + 'last update probably failed.</div>';
+  if (window.console) console.error(e);
 });
 </script>
 </body>

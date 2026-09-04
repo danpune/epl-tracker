@@ -154,9 +154,10 @@ def fetch_recent(days=16):
         if not home or not away:
             continue
         hk, ak = key(home["team"]["displayName"]), key(away["team"]["displayName"])
+        started = st.get("state") != "pre"          # ESPN sends "0" for scheduled matches
         out[("PL", hk, ak)] = {
-            "hs": int(home["score"]) if str(home.get("score", "")).isdigit() else None,
-            "as": int(away["score"]) if str(away.get("score", "")).isdigit() else None,
+            "hs": int(home["score"]) if started and str(home.get("score", "")).isdigit() else None,
+            "as": int(away["score"]) if started and str(away.get("score", "")).isdigit() else None,
             "done": bool(st.get("completed")),
             "live": st.get("state") == "in",
             "clock": st.get("shortDetail", "") if st.get("state") == "in" else "",
@@ -179,7 +180,8 @@ def fetch_cup(code, tag, teams):
         print(f"  {tag}: fetch failed ({e}) — skipping, keeping the rest")
         return []
 
-    out = []
+    league = set(teams)          # snapshot: the loop below ADDS to `teams`, and filtering
+    out = []                     # against the growing set let every opponent's own ties in
     for e in d.get("events", []):
         c = (e.get("competitions") or [{}])[0]
         comps = c.get("competitors", [])
@@ -190,7 +192,7 @@ def fetch_cup(code, tag, teams):
         if not home or not away:
             continue
         hk, ak = key(home["team"]["displayName"]), key(away["team"]["displayName"])
-        if hk not in teams and ak not in teams:
+        if hk not in league and ak not in league:
             continue                                    # neither side is a PL club
 
         for side, k in ((home, hk), (away, ak)):

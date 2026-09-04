@@ -33,6 +33,9 @@ jobs:
       - name: Match official highlights (merge-only, ok if YouTube blocks CI)
         run: python build_highlights.py || true
 
+      - name: Refresh head-to-head (past seasons never change; cheap to keep current)
+        run: python build_history.py || true
+
       - name: Self-check
         run: python test_fetch.py
 

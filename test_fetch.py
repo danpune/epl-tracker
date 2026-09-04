@@ -56,6 +56,18 @@ if os.path.exists("data.json"):
     assert not future_done, (f"{len(future_done)} matches marked done with a future "
                              f"kickoff, e.g. {future_done[0]}")
 
+    # an unplayed match must not carry a scoreline. ESPN reports "0" before kickoff and
+    # that is how 133 phantom 0-0 results shipped once already.
+    ghost = [m for m in d["matches"]
+             if m.get("hs") is not None and not m.get("done") and not m.get("live")]
+    assert not ghost, f"{len(ghost)} unplayed matches carry a score, e.g. {ghost[0]}"
+
+    # every cup tie must involve a current league club — this is a Premier League tracker
+    league = {r["t"] for r in d["table"]}
+    stray = [m for m in d["matches"]
+             if m["c"] != "PL" and m["h"] not in league and m["a"] not in league]
+    assert not stray, f"{len(stray)} cup ties involve no league club, e.g. {stray[0]}"
+
     # every match, cups included, must reference a club the UI can name and draw
     for m in d["matches"]:
         assert m["h"] in d["teams"] and m["a"] in d["teams"], f"unnamed club in {m}"

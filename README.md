@@ -92,7 +92,7 @@ carries no Premier League markets at all.
     build_history.py    16 seasons of head-to-head; rerun only when a season starts
     test_fetch.py   self-check: DST + name matching + data integrity
     index.html      the whole UI, one file, no framework
-    data.json       generated, ~50KB
+    data.json       generated, ~90KB
 
 ## Run locally
 

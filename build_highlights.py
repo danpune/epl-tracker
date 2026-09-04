@@ -117,6 +117,17 @@ def main():
     print(f"{len(ids)} ids scraped, {len(vids)} verified as official uploads")
 
     teams = data["teams"]
+    # An alias shared by two clubs matches both sides of their fixture on its own:
+    # "manchester" comes out of BOTH Manchester clubs and would bind any title
+    # mentioning it to the derby. Drop ambiguous aliases before matching.
+    league = [r["t"] for r in data["table"]]
+    seen_alias = {}
+    for k in league:
+        for a in aliases(teams[k]):
+            seen_alias.setdefault(a, set()).add(k)
+    ambiguous = {a for a, owners in seen_alias.items() if len(owners) > 1}
+    if ambiguous:
+        print(f"  ignoring ambiguous aliases: {sorted(ambiguous)}")
     season = data["season"]                       # e.g. "2026/27"
     finished = [m for m in data["matches"] if m.get("done")]
     added = skipped = 0
@@ -135,7 +146,8 @@ def main():
         mk = m.get("e") or (m["h"] + m["a"] + m["utc"])
         if mk in prev:
             continue
-        ha, aa = aliases(teams[m["h"]]), aliases(teams[m["a"]])
+        ha = aliases(teams[m["h"]]) - ambiguous
+        aa = aliases(teams[m["a"]]) - ambiguous
         for v, title, nt, comp in vids:
             if comp:
                 continue                          # all-time compilation, not this match
