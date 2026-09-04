@@ -70,6 +70,13 @@ h1{margin:6px 0 4px;font-size:30px;font-weight:900;letter-spacing:-.01em}
 .hero.livenow{animation:pulse 2.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 6px 22px -10px rgba(0,0,0,.5)}50%{box-shadow:0 6px 30px -6px rgba(220,30,30,.75)}}
 .streak{font-size:13px;opacity:.95;margin-top:9px}
+.season{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:12px 0 4px}
+.season .sl{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted);margin-bottom:7px;flex-wrap:wrap}
+.season .sl b{color:var(--text)}
+.season .track{position:relative;height:9px;background:var(--bg);border-radius:5px;overflow:hidden}
+.season .fill{height:100%;background:var(--club);border-radius:5px}
+.season .foot{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted);margin-top:7px;flex-wrap:wrap}
+.season .foot b{color:var(--club)}
 /* tabs */
 nav{display:flex;gap:6px;margin:18px 0 16px;flex-wrap:wrap}
 nav button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 16px;font-size:13.5px;cursor:pointer}
@@ -288,6 +295,7 @@ footer a{color:var(--club)}
 </div>
 
 <div id="hero"></div>
+<div id="season"></div>
 
 <nav>
   <button data-t="table" class="on">Table</button>
@@ -1235,10 +1243,46 @@ document.addEventListener('keydown', function(e){
   if (t.closest('.m,[data-squad],.hlc')){ e.preventDefault(); t.click(); }
 });
 
+/* ---------- season progress: where are we in the 9-month season ---------- */
+function renderSeason(){
+  var el = document.getElementById('season');
+  var lg = D.matches.filter(function(m){ return m.c === 'PL'; }).slice()
+            .sort(function(a, b){ return a.utc < b.utc ? -1 : a.utc > b.utc ? 1 : 0; });
+  if (!lg.length){ el.innerHTML = ''; return; }
+
+  var first = dt(lg[0]), last = dt(lg[lg.length - 1]), now = Date.now();
+  var playedLg = lg.filter(function(m){ return m.done; }).length;
+  var mine = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
+  var minePlayed = mine.filter(function(m){ return m.done; }).length;
+
+  // Progress by TIME, not by matches: fixtures bunch up, so a match count misreads
+  // where you actually are in the calendar.
+  var pct = Math.max(0, Math.min(100,
+    (now - first.getTime()) / (last.getTime() - first.getTime()) * 100));
+  var monthsLeft = (last.getTime() - now) / (1000 * 60 * 60 * 24 * 30.44);
+  var t = team(TEAM);
+  var fmt = new Intl.DateTimeFormat([], {day:'numeric', month:'short'});
+  var left = monthsLeft <= 0 ? 'season over'
+           : monthsLeft < 1 ? Math.max(1, Math.round(monthsLeft * 30.44)) + ' days to go'
+           : monthsLeft.toFixed(1).replace(/\.0$/, '') + ' months to go';
+
+  el.innerHTML = '<div class="season">'
+    + '<div class="sl"><span>Season <b>' + esc(fmt.format(first)) + '</b> \u2192 <b>'
+    +   esc(fmt.format(last)) + '</b></span>'
+    +   '<span>' + esc(left) + '</span></div>'
+    + '<div class="track"><div class="fill" style="width:' + pct.toFixed(1) + '%"></div></div>'
+    + '<div class="foot">'
+    +   '<span><b>' + minePlayed + ' of ' + mine.length + '</b> ' + esc(t.short)
+    +     ' matches played \u00b7 <b>' + (mine.length - minePlayed) + '</b> to go</span>'
+    +   '<span>league: ' + playedLg + ' of ' + lg.length + '</span>'
+    + '</div></div>';
+}
+
 /* ---------- shell ---------- */
 function render(){
   view.onclick = null;          // drop the previous tab's delegated handler
   renderHero();
+  renderSeason();
   if (TAB === 'table') renderTable();
   else if (TAB === 'fix') renderFixtures();
   else if (TAB === 'hl') renderHighlights();
@@ -1286,7 +1330,8 @@ getJSON('data.json').then(function(r){ return r.json(); }).then(function(d){
   D.matches.forEach(function(m, i){ m._i = i; });
   var lg = D.matches.filter(function(m){ return m.c === 'PL'; });
   var played = lg.filter(function(m){ return m.done; }).length;
-  document.getElementById('sub').textContent = D.season + ' season · ' + played + ' of ' + lg.length + ' league matches played';
+  document.getElementById('sub').textContent = D.season + ' season · ' + D.table.length
+    + ' clubs · ' + lg.length + ' matches · 38 each';
   document.getElementById('tz').textContent = 'Times in ' + TZ;
   document.getElementById('upd').textContent = 'Updated ' + new Date(D.updated).toLocaleString();
   render();
