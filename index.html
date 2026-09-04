@@ -1261,7 +1261,7 @@ function renderSeason(){
     (now - first.getTime()) / (last.getTime() - first.getTime()) * 100));
   var monthsLeft = (last.getTime() - now) / (1000 * 60 * 60 * 24 * 30.44);
   var t = team(TEAM);
-  var fmt = new Intl.DateTimeFormat([], {day:'numeric', month:'short'});
+  var fmt = new Intl.DateTimeFormat([], {day:'numeric', month:'short', year:'numeric'});
   var left = monthsLeft <= 0 ? 'season over'
            : monthsLeft < 1 ? Math.max(1, Math.round(monthsLeft * 30.44)) + ' days to go'
            : monthsLeft.toFixed(1).replace(/\.0$/, '') + ' months to go';
