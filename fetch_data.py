@@ -268,7 +268,12 @@ def fetch_odds(teams):
                 return None
         bid, ask = f("yes_bid_dollars"), f("yes_ask_dollars")
         if bid is not None and ask is not None:
-            return (bid + ask) / 2                       # mid of the book
+            # A wide spread means nobody is really making a market. The midpoint of
+            # 6c/71c is not a probability, and rendering it as one is worse than
+            # rendering nothing — the About tab promises quoted markets only.
+            if ask - bid > 15:
+                return None
+            return (bid + ask) / 2                       # mid of a real book
         return bid if bid is not None else ask if ask is not None else f("last_price_dollars")
 
     odds = {}
@@ -441,16 +446,6 @@ def main():
 
     matches.sort(key=lambda x: x["utc"])
 
-    odds = fetch_odds(teams)
-    priced = 0
-    for m in matches:
-        o = odds.get((frozenset((m["h"], m["a"])), m["utc"][:10]))
-        if o and not m.get("done"):
-            p = o["sides"]
-            if m["h"] in p and m["a"] in p:
-                m["o"] = [round(p[m["h"]]), round(p["d"]), round(p[m["a"]])]
-                priced += 1
-
     recent = fetch_recent()
     live = 0
     for m in matches:
@@ -465,6 +460,23 @@ def main():
         if r["live"]:
             m["live"], m["clock"] = True, r["clock"]
             live += 1
+
+    # Odds must be attached AFTER `done` is decided. League matches have no `done`
+    # key until the loop above runs, so `not m.get("done")` was always true and a
+    # finished match kept its pre-match price — which test_fetch.py rejects, which
+    # would have aborted the workflow and frozen the site the first time a priced
+    # match kicked off. Kalshi leaves markets open ~52h past the final whistle.
+    odds = fetch_odds(teams)
+    priced = 0
+    for m in matches:
+        if m.get("done") or m.get("live"):
+            continue
+        o = odds.get((frozenset((m["h"], m["a"])), m["utc"][:10]))
+        if o:
+            p = o["sides"]
+            if m["h"] in p and m["a"] in p:
+                m["o"] = [round(p[m["h"]]), round(p["d"]), round(p[m["a"]])]
+                priced += 1
 
     pre = {"matches": matches}
     venues = geocode_venues(pre)

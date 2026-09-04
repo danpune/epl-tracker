@@ -30,20 +30,22 @@
 <meta name="apple-mobile-web-app-title" content="PL Tracker">
 <style>
 :root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e;
-  --club:#3d195b;--club2:#1d1526}
+  --club:#3d195b;--club2:#1d1526;--club-lite:#c9a6ff;
+  --club-ink:var(--club)}
 @media (prefers-color-scheme: dark){
   :root{--bg:#141019;--card:#1e1826;--line:#312a3b;--text:#efeaf4;--muted:#a79fb2;--live:#ff6b52;--good:#3fbc80;
-        --acc:#c9a6ff}
+        --acc:#c9a6ff;
+        --club-ink:var(--club-lite)}
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 .wrap{max-width:900px;margin:0 auto;padding:0 16px 60px}
-header{padding:26px 0 16px;border-bottom:2px solid var(--club)}
-.kicker{font-size:12px;letter-spacing:.22em;color:var(--club);text-transform:uppercase;font-weight:700}
+header{padding:26px 0 16px;border-bottom:2px solid var(--club-ink)}
+.kicker{font-size:12px;letter-spacing:.22em;color:var(--club-ink);text-transform:uppercase;font-weight:700}
 h1{margin:6px 0 4px;font-size:30px;font-weight:900;letter-spacing:-.01em}
 .sub{color:var(--muted);font-size:13.5px}
 /* team picker */
-.picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--club);border-radius:12px;padding:12px 14px}
+.picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--club-ink);border-radius:12px;padding:12px 14px}
 .picker label{font-size:13px;color:var(--muted)}
 .picker select{background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--text);font-size:15px;font-weight:700;padding:7px 10px}
 .picker .tz{font-size:12.5px;color:var(--muted);margin-left:auto}
@@ -74,17 +76,17 @@ h1{margin:6px 0 4px;font-size:30px;font-weight:900;letter-spacing:-.01em}
 .season .sl{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted);margin-bottom:7px;flex-wrap:wrap}
 .season .sl b{color:var(--text)}
 .season .track{position:relative;height:9px;background:var(--bg);border-radius:5px;overflow:hidden}
-.season .fill{height:100%;background:var(--club);border-radius:5px}
+.season .fill{height:100%;background:var(--club-ink);border-radius:5px}
 .season .foot{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted);margin-top:7px;flex-wrap:wrap}
-.season .foot b{color:var(--club)}
+.season .foot b{color:var(--club-ink)}
 /* tabs */
 nav{display:flex;gap:6px;margin:18px 0 16px;flex-wrap:wrap}
 nav button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 16px;font-size:13.5px;cursor:pointer}
 nav button.on{background:var(--club);color:#fff;border-color:var(--club);font-weight:700}
 nav button{transition:background .15s,color .15s,border-color .15s}
-nav button:hover{border-color:var(--club)}
+nav button:hover{border-color:var(--club-ink)}
 .m{transition:border-color .12s,transform .12s}
-.m:hover{border-color:var(--club)}
+.m:hover{border-color:var(--club-ink)}
 .chipbar{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
 .chipbar button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer}
 .chipbar button.on{background:var(--club);color:#fff;border-color:var(--club);font-weight:700}
@@ -96,7 +98,7 @@ td{padding:9px 6px;text-align:right;font-size:14px;font-variant-numeric:tabular-
 td:nth-child(2){text-align:left}
 tr:last-child td{border-bottom:0}
 tr.me td{background:color-mix(in srgb,var(--club) 9%,#fff);font-weight:700}
-tr.me td:first-child{box-shadow:inset 3px 0 0 var(--club)}
+tr.me td:first-child{box-shadow:inset 3px 0 0 var(--club-ink)}
 .cl td:first-child{box-shadow:inset 3px 0 0 var(--good)}
 .rel td:first-child{box-shadow:inset 3px 0 0 var(--live)}
 tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
@@ -111,7 +113,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .sc1 .r{color:var(--muted);width:16px;font-variant-numeric:tabular-nums;flex:0 0 auto;font-size:12px}
 .sc1 img{width:18px;height:18px;flex:0 0 auto}
 .sc1 .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sc1 .g{font-weight:800;font-variant-numeric:tabular-nums;color:var(--club)}
+.sc1 .g{font-weight:800;font-variant-numeric:tabular-nums;color:var(--club-ink)}
 .sc1 .cup{color:var(--muted);font-size:11px;font-weight:600}
 .nx{display:flex;align-items:center;gap:5px;justify-content:flex-end;font-size:11.5px;color:var(--muted)}
 .nx img{width:16px;height:16px}
@@ -119,9 +121,9 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .key{font-size:12px;color:var(--muted);margin-top:10px;display:flex;gap:16px;flex-wrap:wrap}
 .key i{font-style:normal;display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
 /* fixtures */
-.day{margin:22px 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--club);border-bottom:1px solid var(--line);padding-bottom:4px;font-weight:700}
+.day{margin:22px 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--club-ink);border-bottom:1px solid var(--line);padding-bottom:4px;font-weight:700}
 .m{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px}
-.m.me{border-left:3px solid var(--club)}
+.m.me{border-left:3px solid var(--club-ink)}
 .m.live{border-left:3px solid var(--live)}
 .m .side{flex:1;display:flex;align-items:center;gap:7px;min-width:0;font-size:14.5px}
 .m .side.a{justify-content:flex-end;text-align:right}
@@ -132,10 +134,10 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .m .w{font-weight:800}
 .m .clock{color:var(--live);font-size:11px;font-weight:700}
 .m{cursor:pointer}
-:focus-visible{outline:2px solid var(--club);outline-offset:2px;border-radius:8px}
+:focus-visible{outline:2px solid var(--club-ink);outline-offset:2px;border-radius:8px}
 .m .go{color:var(--muted);font-size:11px;flex:0 0 auto;width:12px;text-align:center}
 .cal{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;color:var(--text);text-decoration:none;background:var(--card);cursor:pointer;margin:0 6px 8px 0}
-.cal:hover{border-color:var(--club);color:var(--text)}
+.cal:hover{border-color:var(--club-ink);color:var(--text)}
 .detail{background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;padding:12px 14px;margin:-7px 0 8px}
 .detail h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .xi{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -150,10 +152,10 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .sbar .rv{text-align:right}
 .sbar .nm{width:112px;color:var(--muted);text-align:center;flex:0 0 auto;font-size:11px}
 .sbar .t{flex:1;display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--bg)}
-.sbar .t i{display:block}.sbar .t .l{background:var(--club)}.sbar .t .r{background:#9b93a6}
+.sbar .t i{display:block}.sbar .t .l{background:var(--club-ink)}.sbar .t .r{background:#9b93a6}
 .hlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .hlc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px;cursor:pointer;text-align:left}
-.hlc:hover{border-color:var(--club)}
+.hlc:hover{border-color:var(--club-ink)}
 .hlthumb{position:relative;border-radius:8px;overflow:hidden;background:#ddd8e2}
 .hlthumb img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
 .hlplay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -163,15 +165,17 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .hlc .hlt{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
 .hlc .rnd{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px}
-.hlday{grid-column:1/-1;margin:6px 0 -4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--club);font-weight:700}
+.hlday{grid-column:1/-1;margin:6px 0 -4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--club-ink);font-weight:700}
 .ovl{position:fixed;inset:0;background:rgba(14,8,18,.88);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
 .ovl .box{width:min(900px,96vw)}
-.ovl .bh{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;font-size:15px;margin-bottom:9px;gap:12px}
+.ovl .bh{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;
+  font-size:15px;margin-bottom:9px;gap:12px;position:sticky;top:0;z-index:1;
+  background:rgba(14,8,18,.92);padding:6px 2px}
 .ovl .bh button{background:none;border:0;color:#fff;font-size:26px;cursor:pointer;line-height:1;
   min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;margin:-8px -8px -8px 0}
 .ovl .fr{aspect-ratio:16/9;width:100%}
 .ovl iframe{width:100%;height:100%;border:0;border-radius:12px;background:#000}
-.playbtn{border:0;background:none;color:var(--club);font-size:15px;cursor:pointer;
+.playbtn{border:0;background:none;color:var(--club-ink);font-size:15px;cursor:pointer;
   flex:0 0 auto;min-width:44px;min-height:44px;margin:-8px -6px -8px 0;
   display:inline-flex;align-items:center;justify-content:center}
 .wx{display:inline-flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--line);
@@ -183,7 +187,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .sqp{font-size:13px;padding:3px 0;display:flex;gap:8px;border-top:1px solid var(--line)}
 .sqp .no{color:var(--muted);width:22px;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums}
 .sqp .ag{color:var(--muted);margin-left:auto;font-size:11px;flex:0 0 auto}
-.sqcol h5{margin:0 0 5px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--club)}
+.sqcol h5{margin:0 0 5px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--club-ink)}
 .clubcell{cursor:pointer}
 .clubcell:hover span{text-decoration:underline}
 .h2h{display:flex;gap:2px;height:22px;border-radius:6px;overflow:hidden;margin:2px 0 8px;font-size:10.5px;font-weight:800}
@@ -194,7 +198,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .h2hm .ss{color:var(--muted);width:52px;flex:0 0 auto;font-variant-numeric:tabular-nums}
 .vids{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:4px}
 .vcard{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px;cursor:pointer;text-align:left;overflow:hidden}
-.vcard:hover{border-color:var(--club)}
+.vcard:hover{border-color:var(--club-ink)}
 .vcard img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:7px;background:#ddd8e2;display:block}
 .vcard .vt{font-size:12px;font-weight:700;margin-top:6px;line-height:1.35}
 .vcard .vd{font-size:11px;color:var(--muted);margin-top:2px}
@@ -223,23 +227,23 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .olab{font-size:11px;color:var(--muted);margin:-2px 0 9px;padding-left:2px}
 .olab a{color:var(--muted)}
 .more{display:block;width:100%;margin:14px 0;padding:11px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--text);font-size:14px;font-weight:700;cursor:pointer}
-.more:hover{border-color:var(--club)}
+.more:hover{border-color:var(--club-ink)}
 /* kickoff times */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
 .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.c .n{font-size:30px;font-weight:900;line-height:1.1;color:var(--club);font-variant-numeric:tabular-nums}
+.c .n{font-size:30px;font-weight:900;line-height:1.1;color:var(--club-ink);font-variant-numeric:tabular-nums}
 .c .l{font-size:12.5px;color:var(--muted);margin-top:3px}
 .bars{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .bar{display:flex;align-items:center;gap:10px;padding:2.5px 0;font-size:13px}
 .bar .h{width:76px;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
 .bar .t{flex:1;background:var(--bg);border-radius:4px;overflow:hidden;height:17px}
-.bar .f{height:100%;background:var(--club);border-radius:4px;min-width:2px}
+.bar .f{height:100%;background:var(--club-ink);border-radius:4px;min-width:2px}
 .bar .f.dim{background:#c3b6d2}
 .bar .v{width:26px;text-align:right;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
 .note{font-size:13px;color:var(--muted);margin:12px 0 0;line-height:1.55}
 footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
-footer a{color:var(--club)}
-@media (prefers-color-scheme: dark){footer a,.saybox a{color:#c9a6ff}}
+footer a{color:var(--club-ink)}
+@media (prefers-color-scheme: dark){.saybox a{color:#c9a6ff}}
 .saybox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
 .saybox .gh{display:inline-block;margin-top:10px;background:var(--club);color:#fff;text-decoration:none;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700}
 .saybox .fine{font-size:12.5px;color:var(--muted);margin-top:12px}
@@ -270,6 +274,7 @@ footer a{color:var(--club)}
   .m{gap:7px}
   h1{font-size:24px}
   .hide-s{display:none}
+  .form-col{display:table-cell}
   .m .side span{font-size:13px}
   .picker .tz{margin-left:0;width:100%}
 }
@@ -441,13 +446,13 @@ function renderTable(){
       + '<td class="hide-s">'+r.w+'</td><td class="hide-s">'+r.d+'</td><td class="hide-s">'+r.l+'</td>'
       + '<td class="hide-s">'+r.gf+'</td><td class="hide-s">'+r.ga+'</td>'
       + '<td>'+(r.gd > 0 ? '+' : '')+r.gd+'</td>'
-      + '<td class="hide-s">'+formPill(r.t)+'</td>'
+      + '<td class="form-col">'+formPill(r.t)+'</td>'
       + '<td class="hide-s">'+nextOpp(r.t)+'</td>'
       + '<td class="pts">'+r.pts+'</td></tr>';
   }).join('');
   view.innerHTML = '<table><thead><tr><th>#</th><th>Club</th><th>Pl</th>'
     + '<th class="hide-s">W</th><th class="hide-s">D</th><th class="hide-s">L</th>'
-    + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th class="hide-s">Form</th><th class="hide-s">Next</th><th>Pts</th></tr></thead>'
+    + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th class="form-col">Form</th><th class="hide-s">Next</th><th>Pts</th></tr></thead>'
     + '<tbody>'+rows+'</tbody></table>'
     + '<div class="key"><span><i style="background:#137a4a"></i>Champions League</span>'
     + '<span><i style="background:#d98324"></i>Europa League</span>'
@@ -867,7 +872,9 @@ function renderTZ(){
     +   esc(t.short)+' kickoffs by your local time</div>'+bars+'</div>'
     + '<p class="note">All '+mine.length+" of "+esc(t.name)+"'s scheduled matches"+comps+", converted from UK time to <b>"+esc(TZ)+'</b>. '
     + 'The three counts above add up to '+mine.length+' — every match lands in exactly one. '
-    + 'UK clocks change on 25 Oct and 28 Mar, so the same 3pm kickoff shifts by an hour for you twice this season; that is already handled here.<br><br>'
+    + 'UK clocks change on 25 Oct and 28 Mar. If your own clocks change on different dates \u2014 '
+    + 'as they do in North America \u2014 your local kickoff time moves more than twice. '
+    + 'All of it is already handled here.<br><br>'
     + '<b>Later fixtures are provisional.</b> Broadcasters move matches for TV, usually about five weeks ahead. '
     + 'This page refreshes from the source a few times a day, so those moves flow through as they are announced.</p>';
 }
@@ -889,6 +896,33 @@ function streakText(k){
 // behind white text (tabs, scorer counts, the hero gradient), so those clubs rendered
 // white-on-white at 1.00:1 — the page effectively vanished. Pick a colour that white
 // can sit on: the club's own alternate if it is dark enough, else darken the primary.
+// Lighten a colour until white-ish text surfaces read it on the dark card (#1e1826).
+// This is the mirror of readableClub(): that one makes white legible ON the colour,
+// this one makes the colour legible ON dark.
+function inkOnDark(col){
+  function rgb(c){
+    c = String(c || '').replace('#', '');
+    return c.length === 6 ? [0, 2, 4].map(function(i){ return parseInt(c.substr(i, 2), 16); }) : null;
+  }
+  function lum(ch){
+    var v = ch.map(function(x){
+      x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+  var ch = rgb(col);
+  if (!ch) return '#c9a6ff';
+  var cardL = lum([30, 24, 38]);                       // --card in dark mode
+  for (var i = 0; i <= 20; i++){
+    var t = i / 20;                                    // blend toward white
+    var mix = ch.map(function(v){ return Math.round(v + (255 - v) * t); });
+    if ((lum(mix) + 0.05) / (cardL + 0.05) >= 4.5){
+      return '#' + mix.map(function(v){ return ('0' + v.toString(16)).slice(-2); }).join('');
+    }
+  }
+  return '#efeaf4';
+}
+
 function readableClub(col, alt){
   function lum(c){
     c = String(c || '').replace('#', '');
@@ -919,8 +953,12 @@ function readableClub(col, alt){
 function renderHero(){
   var el = document.getElementById('hero');
   var t = team(TEAM);
-  document.documentElement.style.setProperty('--club', readableClub(t.col, t.col2));
+  var club = readableClub(t.col, t.col2);
+  document.documentElement.style.setProperty('--club', club);
   document.documentElement.style.setProperty('--club2', t.col2 || '#1d1526');
+  // --club is for WHITE TEXT ON IT; --club-lite is the same identity readable as ink
+  // on the dark card. CSS picks between them per colour scheme.
+  document.documentElement.style.setProperty('--club-lite', inkOnDark(club));
 
   var now = Date.now();
   var mine = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
@@ -1009,9 +1047,9 @@ function renderAbout(){
   + '</div>'
   + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">How often it updates</h4>'
   + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
-  +   '<b>How often it updates:</b> scores refresh in your browser straight from ESPN while '
+  +   'Scores refresh in your browser straight from ESPN while '
   +   'matches are on — about once a minute during a game — so they do not wait on the '
-  +   'build. The table, fixtures and calendars come from a scheduled job that asks for '
+  +   'build. The table, fixtures and calendars come from a scheduled job that asks to run '
   +   'every 30 minutes; GitHub throttles scheduled jobs on small projects and in practice '
   +   'runs it every few hours. That is fine for a schedule, which is why live scores are '
   +   'fetched separately.<br><br>'
@@ -1225,6 +1263,24 @@ function liveWindow(){
   return Object.keys(comps);
 }
 
+// Fold one finished league result into the standings so the table cannot disagree
+// with the Form column beside it.
+function applyToTable(m){
+  var rows = {};
+  D.table.forEach(function(r){ rows[r.t] = r; });
+  var h = rows[m.h], a = rows[m.a];
+  if (!h || !a) return;
+  [[h, m.hs, m['as']], [a, m['as'], m.hs]].forEach(function(x){
+    var r = x[0], gf = x[1], ga = x[2];
+    r.pld += 1; r.gf += gf; r.ga += ga; r.gd = r.gf - r.ga;
+    if (gf > ga){ r.w += 1; r.pts += 3; }
+    else if (gf < ga){ r.l += 1; }
+    else { r.d += 1; r.pts += 1; }
+  });
+  D.table.sort(function(x, y){ return (y.pts - x.pts) || (y.gd - x.gd) || (y.gf - x.gf); });
+  D.table.forEach(function(r, i){ r.rank = i + 1; });
+}
+
 function applyLive(events){
   var byId = {}, changed = false;
   D.matches.forEach(function(m){ if (m.e) byId[m.e] = m; });
@@ -1241,8 +1297,13 @@ function applyLive(events){
     var live = st.state === 'in', done = !!st.completed;
     var clock = live ? (st.shortDetail || '') : '';
     if (m.hs !== hs || m['as'] !== as || !!m.live !== live || !!m.done !== done || m.clock !== clock){
+      var wasDone = !!m.done;
       m.hs = hs; m['as'] = as; m.done = done; m.clock = clock;
       if (live) m.live = true; else delete m.live;
+      // The table comes from ESPN's standings and only refreshes on the slow build,
+      // but Form and the streak derive from D.matches — so a full-time result made
+      // the row show three form pills next to "Pl 2". Apply it to the table too.
+      if (done && !wasDone && m.c === 'PL' && hs != null && as != null) applyToTable(m);
       changed = true;
     }
   });
@@ -1305,8 +1366,13 @@ function renderSeason(){
 
   var first = dt(lg[0]), last = dt(lg[lg.length - 1]), now = Date.now();
   var playedLg = lg.filter(function(m){ return m.done; }).length;
-  var mine = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
+  // League only: it is the one total that is fixed at 38 all season, and it agrees
+  // with the Pl column in the table below. Counting cups made the strip contradict
+  // the table, and the cup total is provisional (FA Cup undrawn, UCL knockouts TBD).
+  var mine = D.matches.filter(function(m){
+    return m.c === 'PL' && (m.h === TEAM || m.a === TEAM); });
   var minePlayed = mine.filter(function(m){ return m.done; }).length;
+  var mineAll = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; }).length;
 
   // Progress by TIME, not by matches: fixtures bunch up, so a match count misreads
   // where you actually are in the calendar.
@@ -1325,10 +1391,10 @@ function renderSeason(){
     +   '<span>' + esc(left) + '</span></div>'
     + '<div class="track"><div class="fill" style="width:' + pct.toFixed(1) + '%"></div></div>'
     + '<div class="foot">'
-    +   '<span>' + esc(t.short) + ' have played <b>' + minePlayed + '</b> of <b>'
-    +     mine.length + '</b> matches \u00b7 <b>' + (mine.length - minePlayed)
-    +     '</b> matches left</span>'
-    +   '<span>League: ' + playedLg + ' of ' + lg.length + ' played</span>'
+    +   '<span>' + esc(t.short) + ' have played <b>' + minePlayed + '</b> of their <b>'
+    +     mine.length + '</b> league matches \u00b7 <b>' + (mine.length - minePlayed)
+    +     '</b> left</span>'
+    +   '<span>' + mineAll + ' in all competitions so far</span>'
     + '</div></div>';
 }
 
@@ -1359,7 +1425,8 @@ function getJSON(path){
                {cache: 'no-store'});
 }
 
-getJSON('highlights.json').then(function(r){ return r.ok ? r.json() : null; })
+getJSON('highlights.json')
+  .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
   .then(function(j){ HL = (j && j.highlights) || {}; if (D) render(); })
   .catch(function(){ HL = {}; HL.__failed = true; if (D) render(); });
 

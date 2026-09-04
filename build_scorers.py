@@ -66,14 +66,15 @@ def main():
                 goals.append({"n": nm, "i": str(a.get("id", "")), "t": team_id,
                               "own": own, "c": m.get("c", "PL")})
                 break
-        # Only bank the result when it is trustworthy. A 0-goal parse on a match that
-        # has not kicked off (or whose events ESPN has not filled in yet) would be
-        # cached forever by this merge-only file, silently losing every real goal.
-        # Only bank when the events actually account for the scoreline. ESPN sometimes
-        # publishes fewer goal events than goals; banking that would lose them for good.
+        # Bank only a trustworthy parse: ESPN sometimes publishes fewer goal events
+        # than the scoreline, and this file is merge-only, so banking a short parse
+        # loses those goals for good. Crucially the CREDIT below must be gated by the
+        # same decision — crediting a match we decline to bank re-credits it on every
+        # run for up to 24 hours, and that inflation is equally permanent.
         expected = (m.get("hs") or 0) + (m.get("as") or 0)
-        if len(goals) >= expected or m["utc"] < stale_before:
-            seen[m["e"]] = len(goals)
+        if not (len(goals) >= expected or m["utc"] < stale_before):
+            continue                           # retry next run, credit nothing now
+        seen[m["e"]] = len(goals)
         added += len(goals)
 
         for g in goals:

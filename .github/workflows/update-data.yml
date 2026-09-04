@@ -37,7 +37,13 @@ jobs:
         run: python build_history.py || true
 
       - name: Refresh the link-preview card (shows the live table)
-        run: pip install --quiet Pillow && python make_preview.py || true
+        run: |
+          # Liberation ships on ubuntu-latest, but install it explicitly: make_preview
+          # now fails loudly rather than silently rendering the card in an 11px
+          # bitmap fallback, which is what it had been publishing.
+          sudo apt-get install -y --no-install-recommends fonts-liberation >/dev/null 2>&1 || true
+          pip install --quiet Pillow
+          python make_preview.py || true
 
       - name: Self-check
         run: python test_fetch.py

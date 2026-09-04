@@ -15,13 +15,30 @@ PURPLE, DEEP, ACCENT = (61, 25, 91), (24, 12, 36), (201, 166, 255)
 UA = {"User-Agent": "epl-tracker/1.0 (github.com/danpune/epl-tracker)"}
 
 
+# macOS names first (local runs), then the fonts that ship on ubuntu-latest. Without
+# the Linux paths every call fell through to load_default(), which IGNORES the size —
+# CI was publishing a 1200x630 card with every string rendered at ~11px.
+FONT_PATHS = {
+    "Arial":       ["/System/Library/Fonts/Supplemental/Arial.ttf",
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"],
+    "Arial Bold":  ["/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"],
+    "Arial Black": ["/System/Library/Fonts/Supplemental/Arial Black.ttf",
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"],
+}
+
+
 def font(name, size):
-    for p in (f"/System/Library/Fonts/Supplemental/{name}.ttf", f"/Library/Fonts/{name}.ttf"):
+    for path in FONT_PATHS[name]:
         try:
-            return ImageFont.truetype(p, size)
+            return ImageFont.truetype(path, size)
         except OSError:
             continue
-    return ImageFont.load_default()
+    # Fail loudly: load_default() would silently ship an unreadable card.
+    raise SystemExit(f"no usable font for {name!r} — tried {FONT_PATHS[name]}")
 
 
 def crest(url, px):
