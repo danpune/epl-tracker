@@ -202,7 +202,12 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .ev{font-size:13px;padding:3px 0;border-top:1px solid var(--line);display:flex;gap:8px}
 .ev .mn{color:var(--muted);width:34px;flex:0 0 auto;font-variant-numeric:tabular-nums}
 .formpill{display:inline-flex;gap:2px}
-.formpill i{width:15px;height:15px;border-radius:3px;font-style:normal;font-size:9.5px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center}
+#formtip{position:absolute;z-index:70;background:var(--text);color:var(--card);font-size:12.5px;
+  font-weight:600;padding:7px 11px;border-radius:8px;pointer-events:none;white-space:nowrap;
+  box-shadow:0 6px 18px -6px rgba(0,0,0,.5)}
+#formtip:after{content:"";position:absolute;left:50%;bottom:-5px;margin-left:-5px;
+  border:5px solid transparent;border-top-color:var(--text);border-bottom:0}
+.formpill i{cursor:pointer;width:15px;height:15px;border-radius:3px;font-style:normal;font-size:9.5px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center}
 .formpill .fw{background:#137a4a}.formpill .fd{background:#9b93a6}.formpill .fl{background:#c0392b}
 .tv{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);
   border-radius:5px;padding:2px 6px;white-space:nowrap;flex:0 1 auto;min-width:0;
@@ -329,21 +334,36 @@ var fDay = new Intl.DateTimeFormat([], {weekday:'long', month:'short', day:'nume
 var fTime = new Intl.DateTimeFormat([], {hour:'numeric', minute:'2-digit'});
 
 /* ---------- form guide (computed from our own results — no extra request) ---------- */
+// Returns the club's last n league results, oldest first, each with the match behind
+// it so a form pill can show the actual scoreline.
 function formOf(k, n){
   var out = [];
   D.matches.forEach(function(m){
     if (m.c !== 'PL' || !m.done || m.hs == null) return;
     if (m.h !== k && m.a !== k) return;
-    var gf = m.h === k ? m.hs : m['as'], ga = m.h === k ? m['as'] : m.hs;
-    out.push(gf > ga ? 'W' : gf < ga ? 'L' : 'D');
+    var home = m.h === k;
+    var gf = home ? m.hs : m['as'], ga = home ? m['as'] : m.hs;
+    out.push({r: gf > ga ? 'W' : gf < ga ? 'L' : 'D',
+              gf: gf, ga: ga, home: home,
+              opp: team(home ? m.a : m.h).short, utc: m.utc, i: m._i});
   });
   return out.slice(-(n || 5));
 }
+var FORMWORD = {W: 'Won', D: 'Drew', L: 'Lost'};
+function formLabel(x){
+  var dfmt = new Intl.DateTimeFormat([], {day: 'numeric', month: 'short'});
+  return FORMWORD[x.r] + ' ' + x.gf + '\u2013' + x.ga + ' ' + (x.home ? 'v ' : 'away to ')
+       + x.opp + ' \u00b7 ' + dfmt.format(dt(x));
+}
 function formPill(k){
   var f = formOf(k, 5);
-  if (!f.length) return '<span class="dim" style="color:var(--muted)">–</span>';
-  return '<span class="formpill">' + f.map(function(r){
-    return '<i class="f'+r.toLowerCase()+'" title="'+r+'">'+r+'</i>'; }).join('') + '</span>';
+  if (!f.length) return '<span class="dim" style="color:var(--muted)">\u2013</span>';
+  return '<span class="formpill">' + f.map(function(x){
+    var lab = formLabel(x);
+    // title = free hover on desktop; data-form + tabindex = tap and keyboard on mobile
+    return '<i class="f'+x.r.toLowerCase()+'" title="'+esc(lab)+'" data-form="'+esc(lab)
+         + '" tabindex="0" role="button" aria-label="'+esc(lab)+'">'+x.r+'</i>'; }).join('')
+    + '</span>';
 }
 
 function nextOpp(k){
@@ -376,6 +396,34 @@ function scorersBlock(){
     + '</div>';
 }
 
+// One shared tooltip. `title` covers desktop hover for free; this covers tap, which
+// is where most people will be, and keyboard focus.
+var formTip = null;
+function hideFormTip(){ if (formTip){ formTip.remove(); formTip = null; } }
+function showFormTip(el){
+  hideFormTip();
+  formTip = document.createElement('div');
+  formTip.id = 'formtip';
+  formTip.textContent = el.dataset.form;
+  document.body.appendChild(formTip);
+  var r = el.getBoundingClientRect(), t = formTip.getBoundingClientRect();
+  var left = r.left + window.scrollX + r.width / 2 - t.width / 2;
+  left = Math.max(8, Math.min(left, document.documentElement.clientWidth - t.width - 8));
+  formTip.style.left = left + 'px';
+  formTip.style.top = (r.top + window.scrollY - t.height - 8) + 'px';
+}
+document.addEventListener('click', function(e){
+  var pill = e.target.closest ? e.target.closest('[data-form]') : null;
+  if (pill){ e.stopPropagation(); showFormTip(pill); } else { hideFormTip(); }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') hideFormTip();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.form){
+    e.preventDefault(); showFormTip(e.target);
+  }
+});
+window.addEventListener('scroll', hideFormTip, {passive: true});
+
 /* ---------- table ---------- */
 function renderTable(){
   var rows = D.table.map(function(r){
@@ -402,7 +450,7 @@ function renderTable(){
     + '<th class="hide-s">GF</th><th class="hide-s">GA</th><th>GD</th><th class="hide-s">Form</th><th class="hide-s">Next</th><th>Pts</th></tr></thead>'
     + '<tbody>'+rows+'</tbody></table>'
     + '<div class="key"><span><i style="background:#137a4a"></i>Champions League</span>'
-    + '<span><i style="background:#d98324"></i>Europa</span>'
+    + '<span><i style="background:#d98324"></i>Europa League</span>'
     + '<span><i style="background:#c0392b"></i>Relegation</span></div>'
     + scorersBlock();
   view.onclick = function(ev){
@@ -481,8 +529,9 @@ function h2hBlock(m){
     +   '<div class="d" style="width:'+pct(dr)+'%">'+(pct(dr) >= 14 ? dr+' D' : '')+'</div>'
     +   '<div class="b" style="width:'+pct(aw)+'%">'+(pct(aw) >= 14 ? aw+' W' : '')+'</div>'
     + '</div>'
-    + '<div class="h2hl">'+esc(team(m.h).short)+' '+hw+' \u00b7 '+dr+' draws \u00b7 '
-    +   aw+' '+esc(team(m.a).short)+' \u2014 '+rec.n+' league meetings since '+esc(HIST.from)+'</div>'
+    + '<div class="h2hl">'+esc(team(m.h).short)+' '+hw+(hw===1?' win':' wins')+' \u00b7 '
+    +   dr+(dr===1?' draw':' draws')+' \u00b7 '+esc(team(m.a).short)+' '+aw+(aw===1?' win':' wins')
+    +   ' \u2014 from '+rec.n+' league meetings since '+esc(HIST.from)+'</div>'
     + rows;
 }
 
@@ -556,7 +605,8 @@ function renderDetail(m, box){
   html += '<a class="cal" id="ics-'+m.e+'">＋ Add to calendar (.ics)</a>'
         + '<a class="cal" href="'+esc(gcalLink(m))+'" target="_blank" rel="noopener noreferrer">＋ Google Calendar</a>'
         + '<a class="cal" id="shr-'+m.e+'">↗ Share card</a>'
-        + '<a class="cal" id="sqh-'+m.e+'">👥 Squads</a>';
+        + '<a class="cal" id="sqh-'+m.e+'">\ud83d\udc65 '
+        +   esc(team(m.h === TEAM ? m.a : m.h).short) + ' squad</a>';
 
   html += '<div id="wx-'+m.e+'"></div>' + h2hBlock(m);
 
@@ -731,8 +781,8 @@ function renderFixtures(){
   });
 
   view.innerHTML = '<button class="more" id="tog">'
-      + (showAll ? 'Showing all 20 clubs \u2014 show only ' + esc(team(TEAM).short)
-                 : 'Showing ' + esc(team(TEAM).short) + ' only \u2014 show all clubs')
+      + (showAll ? 'Show only ' + esc(team(TEAM).short) + '\u2019s matches'
+                 : 'Show all 20 clubs')
       + '</button>'
       + (start > 0 ? '<button class="more" id="past">\u2191 Show earlier matches</button>'
                    : (showPast && nextIdx > 0 ? '<button class="more" id="past">\u2193 Jump to the next match</button>' : ''))
@@ -809,9 +859,9 @@ function renderTZ(){
   view.innerHTML =
       '<div class="cards">'
     + '<div class="c"><div class="n">'+easy+'<span style="font-size:17px;color:var(--muted)">/'+mine.length+'</span></div>'
-    +   '<div class="l">easy — weekend, or a weeknight after 5pm</div></div>'
-    + '<div class="c"><div class="n">'+work+'</div><div class="l">clash with your work day (Mon–Fri, 8–5)</div></div>'
-    + '<div class="c"><div class="n">'+alarm+'</div><div class="l">before 8am — set an alarm</div></div>'
+    +   '<div class="l">Easy to watch — a weekend, or after 5pm on a weeknight</div></div>'
+    + '<div class="c"><div class="n">'+work+'</div><div class="l">Clash with your work day (Mon–Fri, 8am–5pm)</div></div>'
+    + '<div class="c"><div class="n">'+alarm+'</div><div class="l">Before 8am — set an alarm</div></div>'
     + '</div>'
     + '<div class="bars"><div class="l" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:9px">'
     +   esc(t.short)+' kickoffs by your local time</div>'+bars+'</div>'
@@ -825,7 +875,7 @@ function renderTZ(){
 /* ---------- hero: the next match, counting down ---------- */
 var heroTimer = null;
 function streakText(k){
-  var f = formOf(k, 20);
+  var f = formOf(k, 20).map(function(x){ return x.r; });
   if (!f.length) return '';
   var last = f[f.length-1], n = 0;
   for (var i = f.length-1; i >= 0 && f[i] === last; i--) n++;
@@ -957,7 +1007,7 @@ function renderAbout(){
   +   'is which club you follow, in this browser. Times come from your browser\'s own timezone; '
   +   'nothing about you is sent anywhere.'
   + '</div>'
-  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Caveats</h4>'
+  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">How often it updates</h4>'
   + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
   +   '<b>How often it updates:</b> scores refresh in your browser straight from ESPN while '
   +   'matches are on — about once a minute during a game — so they do not wait on the '
@@ -965,6 +1015,9 @@ function renderAbout(){
   +   'every 30 minutes; GitHub throttles scheduled jobs on small projects and in practice '
   +   'runs it every few hours. That is fine for a schedule, which is why live scores are '
   +   'fetched separately.<br><br>'
+  + '</div>'
+  + '<h4 style="margin:16px 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Caveats</h4>'
+  + '<div class="fine" style="font-size:13.5px;color:var(--text);line-height:1.6">'
   +   'Later fixtures are provisional — broadcasters move matches about five weeks out, so subscribe '
   +   'to the calendar rather than downloading it once. Full match highlights are rights-restricted; '
   +   'the video shown is ESPN\'s own. Odds are informational, not betting advice. '
@@ -1275,7 +1328,7 @@ function renderSeason(){
     +   '<span>' + esc(t.short) + ' have played <b>' + minePlayed + '</b> of <b>'
     +     mine.length + '</b> matches \u00b7 <b>' + (mine.length - minePlayed)
     +     '</b> matches left</span>'
-    +   '<span>league: ' + playedLg + ' of ' + lg.length + ' played</span>'
+    +   '<span>League: ' + playedLg + ' of ' + lg.length + ' played</span>'
     + '</div></div>';
 }
 
