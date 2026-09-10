@@ -47,7 +47,21 @@ def fetch_season():
     for m in get(OF).get("matches", []):
         t = m.get("time") or "15:00"
         local = datetime.strptime(f"{m['date']} {t}", "%Y-%m-%d %H:%M").replace(tzinfo=UK)
-        sc = (m.get("score") or {}).get("ft")
+        # openfootball is not uniform: `score` is usually {"ft":[h,a]} but some
+        # records carry the pair directly, or score1/score2. build_history.py was
+        # hardened against this long ago; this function was not, and upstream
+        # publishing two list-shaped scores took the whole pipeline down.
+        raw = m.get("score")
+        if isinstance(raw, dict):
+            sc = raw.get("ft")
+        elif isinstance(raw, list):
+            sc = raw
+        elif m.get("score1") is not None:
+            sc = [m.get("score1"), m.get("score2")]
+        else:
+            sc = None
+        if sc is not None and (len(sc) != 2 or sc[0] is None or sc[1] is None):
+            sc = None
         out.append({
             "utc": local.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
             "md": int(re.sub(r"\D", "", m.get("round", "0")) or 0),
