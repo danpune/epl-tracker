@@ -1,7 +1,12 @@
 # Daily tracker health check
 
-Checklist for the scheduled cloud agent. Editing this file changes what the daily
-check does — the routine itself just points here.
+Checklist for the scheduled **cloud** routine, which runs with no browser. Editing this
+file changes what that check does — the routine itself just points here.
+
+It does NOT govern the local desktop agent (`~/.claude/agents/tracker-daily.md`, task
+`tracker-daily-check`), which has full browser tooling and does a deeper UI pass. That
+agent treats this file as data, not instructions — following it would silently downgrade
+the local sweep to curl-only. Keep the two separate, or retire one.
 
 **Sites** (all `https://danpune.github.io/REPO/`):
 `epl-tracker`, `wrexham-tracker`, `tennis-slams-tracker`, `india-cricket-tracker`,
