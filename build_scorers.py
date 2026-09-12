@@ -51,7 +51,9 @@ def main():
         goals = []
         for ev in d.get("keyEvents", []):
             text = ((ev.get("type") or {}).get("text") or "").lower()
-            if "goal" not in text or "no goal" in text:
+            # ESPN flags every goal as a scoringPlay — including "Penalty - Scored",
+            # which a text match on "goal" missed. Shootout kicks are not goals.
+            if not ev.get("scoringPlay") or ev.get("shootout") or "no goal" in text:
                 continue
             own = "own" in text
             team_id = str(((ev.get("team") or {}).get("id")) or "")

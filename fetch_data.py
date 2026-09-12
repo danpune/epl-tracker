@@ -168,7 +168,9 @@ def fetch_recent(days=16):
         if not home or not away:
             continue
         hk, ak = key(home["team"]["displayName"]), key(away["team"]["displayName"])
-        started = st.get("state") != "pre"          # ESPN sends "0" for scheduled matches
+        # ESPN sends "0" for scheduled matches, and a postponed one is state "post" but
+        # not completed — so only a match in play or finished carries a score.
+        started = st.get("state") == "in" or bool(st.get("completed"))
         out[("PL", hk, ak)] = {
             "hs": int(home["score"]) if started and str(home.get("score", "")).isdigit() else None,
             "as": int(away["score"]) if started and str(away.get("score", "")).isdigit() else None,
@@ -220,7 +222,8 @@ def fetch_cup(code, tag, teams):
                             "abbr": t.get("abbreviation", ""), "id": t.get("id", ""), "logo": logo}
 
         st = (c.get("status") or {}).get("type") or {}
-        started = st.get("state") != "pre"      # ESPN sends "0" for scheduled matches
+        # same rule as the league: postponed/abandoned (post, not completed) has no score
+        started = st.get("state") == "in" or bool(st.get("completed"))
         num = lambda x: (int(x["score"]) if started and str(x.get("score", "")).isdigit()
                          else None)
         note = next((n.get("headline", "") for n in (c.get("notes") or []) if n.get("headline")), "")

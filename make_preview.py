@@ -9,6 +9,7 @@ Text stays large and short: these render as small thumbnails in chat.
 """
 import io, json, urllib.request
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1200, 630
@@ -129,7 +130,9 @@ def main():
                 dr.text((64, y + 92), "v", font=font("Arial Bold", 26), fill=(150, 138, 166))
             y += 128
 
-        ko = datetime.strptime(nxt["utc"], "%Y-%m-%dT%H:%MZ")
+        # stored kickoff is UTC; the card says "UK", so convert (15:30Z is 16:30 in BST)
+        ko = (datetime.strptime(nxt["utc"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)
+              .astimezone(ZoneInfo("Europe/London")))
         where = "Home" if nxt["h"] == FOLLOW else "Away"
         dr.text((64, 428), ko.strftime("%a %d %b, %H:%M UK") + f"  \u00b7  {where}",
                 font=font("Arial Bold", 33), fill=accent)

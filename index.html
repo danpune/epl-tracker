@@ -654,7 +654,7 @@ function renderDetail(m, box){
 
   var ke = (d.keyEvents || []).filter(function(e){
     var ty = ((e.type || {}).text || '').toLowerCase();
-    return ty.indexOf('goal') > -1 || ty.indexOf('card') > -1;
+    return (e.scoringPlay && !e.shootout) || ty.indexOf('goal') > -1 || ty.indexOf('card') > -1;   // 'Penalty - Scored' has no 'goal'
   });
   if (ke.length){
     html += '<h4>Key events</h4>';
@@ -757,7 +757,7 @@ function matchRow(m){
     + '<div class="go">\u203a</div>'
     + '</div>';
 
-  if (!m.o) return row;
+  if (!m.o || m.done || m.live) return row;       // pre-match prices mean nothing once it kicks off
   // Kalshi implied probabilities. They carry an overround, so normalise to 100 for the bar.
   var tot = m.o[0] + m.o[1] + m.o[2] || 1;
   var pc = m.o.map(function(x){ return Math.round(x / tot * 100); });
@@ -1130,7 +1130,7 @@ function shareCard(m){
   var W = 1200, H = 630, c = document.createElement('canvas');
   c.width = W; c.height = H;
   var x = c.getContext('2d');
-  var col = team(TEAM).col || '#3d195b';
+  var col = readableClub(team(TEAM).col, team(TEAM).col2) || '#3d195b';   // white text sits on this
 
   var g = x.createLinearGradient(0, 0, W, H);
   g.addColorStop(0, col); g.addColorStop(1, '#191021');
