@@ -30,8 +30,8 @@
 <meta name="apple-mobile-web-app-title" content="PL Tracker">
 <style>
 :root{--bg:#f6f4f8;--card:#fff;--line:#e2dde8;--text:#1d1526;--muted:#6b6377;--acc:#3d195b;--live:#c0392b;--good:#137a4a;--warn:#b3541e;
-  --club:#3d195b;--club2:#1d1526;--club-lite:#c9a6ff;
-  --club-ink:var(--club)}
+  --club:#3d195b;--club2:#1d1526;--club-lite:#c9a6ff;--club-dark:#3d195b;
+  --club-ink:var(--club-dark)}
 @media (prefers-color-scheme: dark){
   :root{--bg:#141019;--card:#1e1826;--line:#312a3b;--text:#efeaf4;--muted:#a79fb2;--live:#ff6b52;--good:#3fbc80;
         --acc:#c9a6ff;
@@ -58,7 +58,7 @@ h1{margin:6px 0 4px;font-size:30px;font-weight:900;letter-spacing:-.01em}
 .hero .cl{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;min-width:0;flex:1}
 .hero .cl:last-of-type{justify-content:flex-end;text-align:right}
 .hero .cl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hero .cl img{width:34px;height:34px;flex:0 0 auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+.hero .cl img{width:34px;height:34px;flex:0 0 auto;background:rgba(255,255,255,.88);border-radius:50%;padding:3px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
 .hero .sep{flex:0 0 auto}
 .hero .sep{opacity:.6;font-size:13px;font-weight:700;letter-spacing:.1em}
 .hero .when{font-size:14px;opacity:.95;margin-top:7px}
@@ -136,7 +136,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .m{cursor:pointer}
 :focus-visible{outline:2px solid var(--club-ink);outline-offset:2px;border-radius:8px}
 .m .go{color:var(--muted);font-size:11px;flex:0 0 auto;width:12px;text-align:center}
-.cal{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;color:var(--text);text-decoration:none;background:var(--card);cursor:pointer;margin:0 6px 8px 0}
+.cal{display:inline-block;font:inherit;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;color:var(--text);text-decoration:none;background:var(--card);cursor:pointer;margin:0 6px 8px 0}
 .cal:hover{border-color:var(--club-ink);color:var(--text)}
 .detail{background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;padding:12px 14px;margin:-7px 0 8px}
 .detail h4{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
@@ -287,6 +287,7 @@ footer a{color:var(--club-ink)}
   .formpill .fd{background:#6b6377}
   .cbadge{background:#241d2e}
   .wx,.tv{background:#241d2e}
+  nav button.on,.chipbar button.on{border-color:var(--club-ink)}
 }
 </style>
 </head>
@@ -607,11 +608,11 @@ function renderDetail(m, box){
   // calendar row — always available, even before a lineup exists
   if (m.tv) html += '<div class="wx" style="margin-bottom:9px">\ud83d\udcfa <b>'
                   + esc(m.tv.join(' / ')) + '</b><span class="wsub">US broadcast</span></div>';
-  html += '<a class="cal" id="ics-'+m.e+'">＋ Add to calendar (.ics)</a>'
+  html += '<button type="button" class="cal" id="ics-'+m.e+'">＋ Add to calendar (.ics)</button>'
         + '<a class="cal" href="'+esc(gcalLink(m))+'" target="_blank" rel="noopener noreferrer">＋ Google Calendar</a>'
-        + '<a class="cal" id="shr-'+m.e+'">↗ Share card</a>'
-        + '<a class="cal" id="sqh-'+m.e+'">\ud83d\udc65 '
-        +   esc(team(m.h === TEAM ? m.a : m.h).short) + ' squad</a>';
+        + '<button type="button" class="cal" id="shr-'+m.e+'">↗ Share card</button>'
+        + '<button type="button" class="cal" id="sqh-'+m.e+'">\ud83d\udc65 '
+        +   esc(team(m.h === TEAM ? m.a : m.h).short) + ' squad</button>';
 
   html += '<div id="wx-'+m.e+'"></div>' + h2hBlock(m);
 
@@ -801,8 +802,8 @@ function renderFixtures(){
   var mineList = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
   var bar = document.createElement('div');
   var feed = location.origin + location.pathname.replace(/[^/]*$/, '') + 'ics/' + TEAM + '.ics';
-  bar.innerHTML = '<a class="cal" id="allics">\uFF0B Download all '+mineList.length+' '
-                + esc(team(TEAM).short)+' matches (.ics)</a>'
+  bar.innerHTML = '<button type="button" class="cal" id="allics">\uFF0B Download all '+mineList.length+' '
+                + esc(team(TEAM).short)+' matches (.ics)</button>'
                 + '<a class="cal" href="webcal://'+esc(feed.replace(/^https?:\/\//,''))+'">\ud83d\udd01 Subscribe (auto-updates)</a>'
                 + '<span class="olab">A download is a snapshot; a subscription keeps up when TV moves a fixture. '
                 + 'Tap any match for lineups, stats, video and a single-match calendar link.</span>';
@@ -923,6 +924,25 @@ function inkOnDark(col){
   return '#efeaf4';
 }
 
+// Light-mode twin of inkOnDark: darken the club colour until it reads as 12px text on
+// the light page (--bg), which is stricter than the 3:1 --club needs under white text.
+function inkOnLight(col){
+  var c = String(col || '').replace('#', '');
+  if (c.length !== 6) return '#3d195b';
+  var ch = [0, 2, 4].map(function(i){ return parseInt(c.substr(i, 2), 16); });
+  function lum(a){
+    var v = a.map(function(x){ x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  }
+  var bgL = lum([246, 244, 248]);                      // --bg in light mode
+  for (var i = 0; i <= 20; i++){
+    var mix = ch.map(function(v){ return Math.round(v * (1 - i / 20)); });   // blend toward black
+    if ((bgL + 0.05) / (lum(mix) + 0.05) >= 4.5)
+      return '#' + mix.map(function(v){ return ('0' + v.toString(16)).slice(-2); }).join('');
+  }
+  return '#1d1526';
+}
+
 function readableClub(col, alt){
   function lum(c){
     c = String(c || '').replace('#', '');
@@ -959,6 +979,7 @@ function renderHero(){
   // --club is for WHITE TEXT ON IT; --club-lite is the same identity readable as ink
   // on the dark card. CSS picks between them per colour scheme.
   document.documentElement.style.setProperty('--club-lite', inkOnDark(club));
+  document.documentElement.style.setProperty('--club-dark', inkOnLight(club));
 
   var now = Date.now();
   var mine = D.matches.filter(function(m){ return m.h === TEAM || m.a === TEAM; });
@@ -1394,7 +1415,7 @@ function renderSeason(){
     +   '<span>' + esc(t.short) + ' have played <b>' + minePlayed + '</b> of their <b>'
     +     mine.length + '</b> league matches \u00b7 <b>' + (mine.length - minePlayed)
     +     '</b> left</span>'
-    +   '<span>' + mineAll + ' in all competitions so far</span>'
+    +   '<span>' + mineAll + ' scheduled in all competitions</span>'
     + '</div></div>';
 }
 
