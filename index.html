@@ -1096,21 +1096,24 @@ var squadCache = {};
 var POS_ORDER = [['G','Goalkeepers'],['D','Defenders'],['M','Midfielders'],['F','Forwards']];
 
 function openSquad(k){
-  var t = team(k);
+  var t = team(k), opener = document.activeElement;
   var ov = document.createElement('div');
   ov.className = 'ovl';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
   function body(inner){
     ov.innerHTML = '<div class="box" style="max-height:88vh;overflow:auto">'
       + '<div class="bh"><span>'+esc(t.name)+' \u00b7 squad</span>'
       + '<button aria-label="Close">\u00d7</button></div>'
       + '<div class="saybox">'+inner+'</div></div>';
+    ov.querySelector('.bh button').focus();          // re-render replaces the button
   }
   body('<p class="sub" style="margin:0">Loading squad\u2026</p>');
-  function close(){ if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', k2); }
+  function close(){ if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', k2); if (opener && opener.focus) opener.focus(); }
   function k2(e){ if (e.key === 'Escape') close(); }
   ov.onclick = function(e){ if (e.target === ov || e.target.tagName === 'BUTTON') close(); };
   document.addEventListener('keydown', k2);
   document.body.appendChild(ov);
+  ov.querySelector('.bh button').focus();
 
   function draw(list){
     if (!list || !list.length){ body('<p class="sub" style="margin:0">No squad published for this club.</p>'); return; }
@@ -1214,17 +1217,19 @@ function playHL(m){
       '_blank', 'noopener');
     return;
   }
-  var ov = document.createElement('div');
+  var ov = document.createElement('div'), opener = document.activeElement;
   ov.className = 'ovl';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
   ov.innerHTML = '<div class="box"><div class="bh"><span>\ud83c\udfac '+esc(title)+'</span>'
     + '<button aria-label="Close">\u00d7</button></div>'
     + '<div class="fr"><iframe src="https://www.youtube-nocookie.com/embed/'+esc(h.yt)
     + '?autoplay=1&amp;rel=0" title="Match video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div></div>';
-  function close(){ if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', esckey); }
+  function close(){ if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', esckey); if (opener && opener.focus) opener.focus(); }
   function esckey(e){ if (e.key === 'Escape') close(); }
   ov.onclick = function(e){ if (e.target === ov || e.target.tagName === 'BUTTON') close(); };
   document.addEventListener('keydown', esckey);
   document.body.appendChild(ov);
+  ov.querySelector('.bh button').focus();
 }
 
 function renderHighlights(){
