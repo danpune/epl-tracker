@@ -212,6 +212,9 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 #formtip:after{content:"";position:absolute;left:50%;bottom:-5px;margin-left:-5px;
   border:5px solid transparent;border-top-color:var(--text);border-bottom:0}
 .formpill i{cursor:pointer;width:15px;height:15px;border-radius:3px;font-style:normal;font-size:9.5px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center}
+/* the pills must stay 15px to fit a 375px table, so grow only the tap area, vertically
+   (the 2px gap splits evenly, so neighbours never overlap): 15x39 hit target */
+.formpill i{position:relative}.formpill i::after{content:"";position:absolute;inset:-12px -1px}
 .formpill .fw{background:#137a4a}.formpill .fd{background:#9b93a6}.formpill .fl{background:#c0392b}
 .tv{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);
   border-radius:5px;padding:2px 6px;white-space:nowrap;flex:0 1 auto;min-width:0;
