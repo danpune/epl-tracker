@@ -34,6 +34,27 @@ def get(url):
         return json.load(r)
 
 
+def season_events(path, start=None, end=None, limit=1000):
+    """Every ESPN event for a competition inside a date window.
+
+    ESPN stopped accepting `dates=YYYYMMDD-YYYYMMDD` in late September 2026 (HTTP 400
+    on every range), which silently broke this whole fetcher. `dates=YYYY` still works
+    and is far cheaper than a call per month, but it returns the CALENDAR year, so the
+    window has to be applied here or last season's ties leak in.
+    """
+    start = start or f"{SEASON[:4]}-07-01"
+    end = end or f"{int(SEASON[:4]) + 1}-07-01"
+    out = []
+    for yr in sorted({start[:4], end[:4]}):
+        try:
+            d = get(f"{path}/scoreboard?dates={yr}&limit={limit}")
+        except Exception as e:
+            print(f"  {path.rsplit('/', 1)[-1]} {yr}: {e}")
+            continue
+        out += [e for e in d.get("events", []) if start <= (e.get("date") or "")[:10] < end]
+    return out
+
+
 def key(name):
     """Stable id for a club across both feeds. 'Manchester United FC' == 'Manchester United'."""
     s = name.lower().replace("&", "and")
@@ -118,46 +139,47 @@ def fetch_event_ids():
     """ESPN's event id AND the US broadcaster for every league fixture, in one pass.
     The id lets the page pull lineups/stats on demand; the broadcaster answers the
     question a schedule alone cannot — where do I actually watch this."""
-    ids, y = {}, int(SEASON[:4])
-    months = [(y, m) for m in range(7, 13)] + [(y + 1, m) for m in range(1, 8)]
-    for yy, mm in months:
-        last = (datetime(yy + (mm == 12), (mm % 12) + 1, 1) - timedelta(days=1)).day
-        rng = f"{yy}{mm:02d}01-{yy}{mm:02d}{last:02d}"
-        try:
-            d = get(f"{ESPN}/scoreboard?dates={rng}&limit=500")
-        except Exception as e:
-            print(f"  event ids {rng}: {e}")
+    ids = {}
+    for e in season_events(ESPN, limit=500):
+        c = (e.get("competitions") or [{}])[0]
+        comps = c.get("competitors", [])
+        if len(comps) != 2:
             continue
-        for e in d.get("events", []):
-            c = (e.get("competitions") or [{}])[0]
-            comps = c.get("competitors", [])
-            if len(comps) != 2:
-                continue
-            h = next((x for x in comps if x.get("homeAway") == "home"), None)
-            a = next((x for x in comps if x.get("homeAway") == "away"), None)
-            if h and a:
-                tv = []
-                for b in (c.get("broadcasts") or []):
-                    tv += [n for n in (b.get("names") or []) if n]
-                seen = set()
-                tv = [x for x in tv if not (x in seen or seen.add(x))]
-                v = c.get("venue") or {}
-                # keyed by competition too: Forest v Leeds happens in BOTH the league
-                # and the EFL Cup, and without this the cup tie inherits the league id
-                ids[("PL", key(h["team"]["displayName"]), key(a["team"]["displayName"]))] = {
-                    "e": str(e.get("id", "")), "tv": tv[:3],
-                    "utc": (e.get("date") or "")[:16] + "Z" if e.get("date") else "",
-                    "v": v.get("fullName", ""),
-                    "vc": ((v.get("address") or {}).get("city") or "")}
+        h = next((x for x in comps if x.get("homeAway") == "home"), None)
+        a = next((x for x in comps if x.get("homeAway") == "away"), None)
+        if h and a:
+            tv = []
+            for b in (c.get("broadcasts") or []):
+                tv += [n for n in (b.get("names") or []) if n]
+            seen = set()
+            tv = [x for x in tv if not (x in seen or seen.add(x))]
+            v = c.get("venue") or {}
+            # keyed by competition too: Forest v Leeds happens in BOTH the league
+            # and the EFL Cup, and without this the cup tie inherits the league id
+            ids[("PL", key(h["team"]["displayName"]), key(a["team"]["displayName"]))] = {
+                "e": str(e.get("id", "")), "tv": tv[:3],
+                "utc": (e.get("date") or "")[:16] + "Z" if e.get("date") else "",
+                "v": v.get("fullName", ""),
+                "vc": ((v.get("address") or {}).get("city") or "")}
     return ids
 
 
 def fetch_recent(days=16):
     """ESPN results for the last N days -> fills openfootball's ~2-day score lag."""
     today = datetime.now(timezone.utc).date()
-    rng = f"{(today - timedelta(days=days)):%Y%m%d}-{(today + timedelta(days=2)):%Y%m%d}"
+    first, last = today - timedelta(days=days), today + timedelta(days=2)
+    # month granularity: a range would 400, and a day-by-day loop is 19 requests
+    months = sorted({f"{first:%Y%m}", f"{today:%Y%m}", f"{last:%Y%m}"})
+    events = []
+    for mo in months:
+        try:
+            events += get(f"{ESPN}/scoreboard?dates={mo}&limit=500").get("events", [])
+        except Exception as e:
+            print(f"  recent {mo}: {e}")
     out = {}
-    for e in get(f"{ESPN}/scoreboard?dates={rng}&limit=500").get("events", []):
+    for e in events:
+        if not (f"{first}" <= (e.get("date") or "")[:10] <= f"{last}"):
+            continue
         c = (e.get("competitions") or [{}])[0]
         st = (c.get("status") or {}).get("type") or {}
         comps = c.get("competitors", [])
@@ -189,16 +211,11 @@ def fetch_cup(code, tag, teams):
     club's calendar, not every qualifying-round tie. Adds any non-league opponent
     (and its crest) to the team map so the UI can render it.
     """
-    rng = f"{SEASON[:4]}0701-{int(SEASON[:4]) + 1}0701"
-    try:
-        d = get(f"{ESPN_SOCCER}/{code}/scoreboard?dates={rng}&limit=1000")
-    except Exception as e:
-        print(f"  {tag}: fetch failed ({e}) — skipping, keeping the rest")
-        return []
+    events = season_events(f"{ESPN_SOCCER}/{code}")
 
     league = set(teams)          # snapshot: the loop below ADDS to `teams`, and filtering
     out = []                     # against the growing set let every opponent's own ties in
-    for e in d.get("events", []):
+    for e in events:
         c = (e.get("competitions") or [{}])[0]
         comps = c.get("competitors", [])
         if len(comps) != 2:
