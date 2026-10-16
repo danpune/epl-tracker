@@ -164,22 +164,20 @@ def fetch_event_ids():
     return ids
 
 
-def fetch_recent(days=16):
-    """ESPN results for the last N days -> fills openfootball's ~2-day score lag."""
-    today = datetime.now(timezone.utc).date()
-    first, last = today - timedelta(days=days), today + timedelta(days=2)
-    # month granularity: a range would 400, and a day-by-day loop is 19 requests
-    months = sorted({f"{first:%Y%m}", f"{today:%Y%m}", f"{last:%Y%m}"})
-    events = []
-    for mo in months:
-        try:
-            events += get(f"{ESPN}/scoreboard?dates={mo}&limit=500").get("events", [])
-        except Exception as e:
-            print(f"  recent {mo}: {e}")
+def fetch_recent():
+    """ESPN's score and status for EVERY league fixture this season.
+
+    This used to read a 16-day window and leave everything older to openfootball,
+    whose scores are the fallback. That held only while openfootball kept up. It
+    stopped publishing scores on 2026-09-20, so each match aged out of the window
+    and reverted to "not played": by late October ten matchday-6 results would have
+    silently disappeared, taking the played count and the Form column with them —
+    and with the collapse guard now in place, the run would refuse to publish at all
+    and the site would freeze instead. Reading the whole season costs the same two
+    requests season_events already makes and removes the dependency entirely.
+    """
     out = {}
-    for e in events:
-        if not (f"{first}" <= (e.get("date") or "")[:10] <= f"{last}"):
-            continue
+    for e in season_events(ESPN, limit=500):
         c = (e.get("competitions") or [{}])[0]
         st = (c.get("status") or {}).get("type") or {}
         comps = c.get("competitors", [])

@@ -572,7 +572,9 @@ function loadWx(m, then){
     .then(function(j){
       var h = j.hourly || {}, want = m.utc.slice(0, 13) + ':00';
       var i = (h.time || []).indexOf(want);
-      if (i < 0){ wxCache[ckey] = null; then(null); return; }
+      // past ~14.4 days the hour is still listed but its values are null, and
+      // Math.round(null) is 0 — which rendered as a confident "0°C / 32°F".
+      if (i < 0 || h.temperature_2m[i] == null){ wxCache[ckey] = null; then(null); return; }
       wxCache[ckey] = {t: Math.round(h.temperature_2m[i]), p: h.precipitation_probability[i],
                        c: h.weather_code[i]};
       then(wxCache[ckey]);
@@ -585,7 +587,7 @@ function wxHtml(w, venue){
   var d = WXC[w.c] || ['', '\ud83c\udf21\ufe0f'];
   var f = Math.round(w.t * 9 / 5 + 32);
   return '<div class="wx"><span>'+d[1]+'</span><b>'+w.t+'\u00b0C / '+f+'\u00b0F</b>'
-    + '<span class="wsub">'+esc(d[0])+' \u00b7 '+w.p+'% rain'
+    + '<span class="wsub">'+esc(d[0])+(w.p == null ? '' : ' \u00b7 '+w.p+'% rain')
     + (venue ? ' \u00b7 '+esc(venue) : '')+'</span></div>';
 }
 
