@@ -41,9 +41,19 @@ jobs:
           # Liberation ships on ubuntu-latest, but install it explicitly: make_preview
           # now fails loudly rather than silently rendering the card in an 11px
           # bitmap fallback, which is what it had been publishing.
-          sudo apt-get install -y --no-install-recommends fonts-liberation >/dev/null 2>&1 || true
+          # Liberation ships on the runner image, but install it explicitly anyway.
+          # ubuntu-latest moves to Ubuntu 26 from 19 Oct 2026, and this is the only
+          # workflow here that installs a system package. make_preview falls back to
+          # DejaVu (present on every Ubuntu image) and then fails loudly rather than
+          # rendering an unreadable 11px bitmap card.
+          sudo apt-get install -y --no-install-recommends fonts-liberation >/dev/null 2>&1 \
+            || echo "::warning::fonts-liberation did not install - falling back to DejaVu"
           pip install --quiet Pillow
-          python make_preview.py || true
+          # Deliberately not fatal: a cosmetic card must not block the data commit.
+          # But it must not be SILENT either - that is how a stale share image goes
+          # unnoticed for weeks. An annotation shows on the run without failing it.
+          python make_preview.py \
+            || echo "::warning::make_preview failed - the share card is now stale"
 
       - name: Self-check
         run: python test_fetch.py
@@ -54,4 +64,25 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.json scorers.json highlights.json history.json venues.json preview.jpg ics/
           git diff --staged --quiet || git commit -m "auto-update data $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
+          # GitHub itself 500s occasionally: on 15 Oct 21:21Z this repo got
+          # "Internal Server Error" and wrexham-tracker "fatal error in commit_refs"
+          # five seconds apart, on the push, in two unrelated repos. One blip cost a
+          # whole cycle and a failure email. Three tries, re-rebasing between them.
+          for i in 1 2 3; do
+            if ! git pull --rebase origin main; then
+              stage="pull --rebase"
+            elif git push; then
+              exit 0
+            else
+              stage="push"
+            fi
+            git rebase --abort 2>/dev/null || true
+            if [ "$i" -lt 3 ]; then
+              echo "$stage failed (attempt $i/3); retrying in $((i * 15))s"
+              sleep $((i * 15))
+            else
+              echo "$stage failed on the final attempt"
+            fi
+          done
+          echo "$stage failed three times - this is not a blip"
+          exit 1
