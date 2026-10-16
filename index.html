@@ -1297,10 +1297,10 @@ function liveWindow(){
     if (!((t > now - 4 * 3600e3 && t < now + 3600e3) || m.live)) return;
     var c = m.c || 'PL', days = comps[c] || (comps[c] = {});
     days[utcDay(t)] = true;
-    // ESPN files an event under its VENUE's local day, so a kickoff near a UTC
-    // midnight can sit on the neighbouring date. English kickoffs (11:30-20:00Z)
-    // never come close, so in practice this adds no request — but it is the guard
-    // the old ±1-day range was really providing.
+    // ESPN buckets these soccer scoreboards by UTC date (checked: dates=20261017
+    // returns exactly the five fixtures dated 2026-10-17), so this never fires for
+    // the current calendar — no kickoff is within 2h of UTC midnight. Kept as cheap
+    // insurance for a future fixture that is, not because it is needed today.
     var h = new Date(t).getUTCHours();
     if (h >= 22) days[utcDay(t + 864e5)] = true;
     if (h < 2)   days[utcDay(t - 864e5)] = true;
@@ -1342,13 +1342,17 @@ function applyLive(events){
     var live = st.state === 'in', done = !!st.completed;
     var clock = live ? (st.shortDetail || '') : '';
     if (m.hs !== hs || m['as'] !== as || !!m.live !== live || !!m.done !== done || m.clock !== clock){
-      var wasDone = !!m.done;
       m.hs = hs; m['as'] = as; m.done = done; m.clock = clock;
       if (live) m.live = true; else delete m.live;
       // The table comes from ESPN's standings and only refreshes on the slow build,
       // but Form and the streak derive from D.matches — so a full-time result made
       // the row show three form pills next to "Pl 2". Apply it to the table too.
-      if (done && !wasDone && m.c === 'PL' && hs != null && as != null) applyToTable(m);
+      // Fold a full-time result into the table ONCE. `!m.done` was not enough: ESPN
+      // reverting to state 'in' resets m.done, so a flap back to completed counted the
+      // same result twice and left the row permanently wrong for the session.
+      if (done && !m._folded && m.c === 'PL' && hs != null && as != null){
+        applyToTable(m); m._folded = true;
+      }
       changed = true;
     }
   });
@@ -1366,7 +1370,10 @@ function stampUpd(){
 
 function pollLive(){
   var comps = liveWindow();
-  if (!comps.length){ liveTimer = setTimeout(pollLive, 15 * 60e3); return; }   // nothing on; check back later
+  if (!comps.length){                        // nothing on; check back later
+    liveFailed = false; stampUpd();          // and clear any notice, or it cries wolf all session
+    liveTimer = setTimeout(pollLive, 15 * 60e3); return;
+  }
   // ESPN stopped accepting dates=YYYYMMDD-YYYYMMDD in Sept 2026 (HTTP 400 on every
   // range), which killed this poller silently — r.ok was false, the 400 became an
   // empty event list, and nothing on the page said so. One request per competition
@@ -1386,8 +1393,7 @@ function pollLive(){
       .then(function(j){ return (j && j.events) || []; })
       .catch(function(e){ failed++; console.warn('live poll ' + q.path + ' ' + q.day + ':', e); return []; });
   })).then(function(lists){
-    if (failed === reqs.length) liveFailed = true;          // every call failed: say so, don't pretend
-    else if (!failed) liveFailed = false;
+    liveFailed = failed > 0;        // ANY failed request means some scores are stale — say so
     var evs = lists.reduce(function(a, b){ return a.concat(b); }, []);
     if (applyLive(evs)){
       // keep the open match panel across the refresh — the detail is cached, so
