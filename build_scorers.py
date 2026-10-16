@@ -30,14 +30,22 @@ def main():
             prev = json.load(open(OUT))
         except Exception:
             pass
-    seen = prev.get("matches", {})
+    # matches: event id -> the match's own goal list. Totals are rebuilt from these
+    # every run rather than incremented, so a correction can actually land: a match
+    # was previously parsed once and never again, and ESPN does revise key events.
+    # (Legacy files stored a bare count; those are re-fetched once and replaced.)
+    seen = {k: v for k, v in (prev.get("matches") or {}).items() if isinstance(v, list)}
 
     now = datetime.now(timezone.utc)
+    nowstamp = now.strftime("%Y-%m-%dT%H:%MZ")
     stale_before = (now - timedelta(days=1)).strftime("%Y-%m-%dT%H:%MZ")
-    todo = [m for m in data["matches"]
-            if m.get("done") and m.get("e") and m["e"] not in seen
-            and m["utc"] <= now.strftime("%Y-%m-%dT%H:%MZ")]   # never parse the future
-    print(f"{len(seen)} matches already parsed, {len(todo)} new")
+    recent_from = (now - timedelta(days=14)).strftime("%Y-%m-%dT%H:%MZ")
+    finished = [m for m in data["matches"]
+                if m.get("done") and m.get("e") and m["utc"] <= nowstamp]
+    # anything never parsed, plus the last fortnight re-read so revisions arrive
+    todo = [m for m in finished if m["e"] not in seen or m["utc"] >= recent_from]
+    print(f"{len(seen)} matches already parsed, {len(todo)} to read "
+          f"({sum(1 for m in todo if m['e'] not in seen)} new)")
 
     added = 0
     for m in todo[:60]:                       # cap per run; the rest catch up next time
@@ -75,28 +83,49 @@ def main():
         # run for up to 24 hours, and that inflation is equally permanent.
         expected = (m.get("hs") or 0) + (m.get("as") or 0)
         if not (len(goals) >= expected or m["utc"] < stale_before):
-            continue                           # retry next run, credit nothing now
-        seen[m["e"]] = len(goals)
-        added += len(goals)
+            continue                           # short parse: keep what we had, retry next run
+        if seen.get(m["e"]) != goals:
+            added += 1
+        seen[m["e"]] = goals
 
+    # Totals are DERIVED, never accumulated — re-reading a match cannot double-count
+    # it, and a revision replaces the old credit instead of adding to it.
+    #
+    # But derived totals are only right once EVERY finished match has a goal list.
+    # The per-run cap means the first run after this change (and any run that hits
+    # the cap) has read only part of the season, and publishing a total derived from
+    # part of it would quietly drop scorers. Keep the previous totals until the set
+    # is complete; the next run finishes the job.
+    missing = [m["e"] for m in finished if m["e"] not in seen]
+    if missing:
+        print(f"  {len(missing)} finished match(es) not parsed yet — keeping the "
+              f"previous totals until they are")
+        prev["matches"] = seen
+        with open(OUT, "w") as f:
+            json.dump(prev, f, separators=(",", ":"))
+        return
+
+    players = {}
+    for goals in seen.values():
         for g in goals:
             if g["own"]:
                 continue                       # own goals do not credit a scorer
             k = g["i"] or g["n"]
-            rec = prev.setdefault("players", {}).setdefault(
-                k, {"n": g["n"], "g": 0, "l": 0, "t": g["t"]})
+            rec = players.setdefault(k, {"n": g["n"], "g": 0, "l": 0, "t": g["t"]})
             rec["g"] += 1
             if g["c"] == "PL":
-                rec["l"] = rec.get("l", 0) + 1     # league goals, which is what a table means
+                rec["l"] += 1                  # league goals, which is what a table means
             rec["n"] = g["n"]
             if g["t"]:
                 rec["t"] = g["t"]
-
+    prev["players"] = players
     prev["matches"] = seen
     with open(OUT, "w") as f:
         json.dump(prev, f, separators=(",", ":"))
     top = sorted(prev.get("players", {}).values(), key=lambda x: (-x.get("l", 0), -x["g"]))[:5]
-    print(f"wrote {OUT} — {len(prev.get('players', {}))} scorers, {added} goals added this run")
+    print(f"wrote {OUT} — {len(prev.get('players', {}))} scorers, "
+          f"{sum(len(v) for v in seen.values())} goals across {len(seen)} matches, "
+          f"{added} match(es) changed this run")
     for p in top:
         print(f"   {p.get('l', 0)} league ({p['g']} all)  {p['n']}")
 

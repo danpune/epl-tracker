@@ -44,14 +44,20 @@ def season_events(path, start=None, end=None, limit=1000):
     """
     start = start or f"{SEASON[:4]}-07-01"
     end = end or f"{int(SEASON[:4]) + 1}-07-01"
-    out = []
-    for yr in sorted({start[:4], end[:4]}):
+    out, years, failed = [], sorted({start[:4], end[:4]}), 0
+    for yr in years:
         try:
             d = get(f"{path}/scoreboard?dates={yr}&limit={limit}")
         except Exception as e:
             print(f"  {path.rsplit('/', 1)[-1]} {yr}: {e}")
+            failed += 1
             continue
         out += [e for e in d.get("events", []) if start <= (e.get("date") or "")[:10] < end]
+    if failed == len(years):
+        # every year failed: that is an outage, not an empty competition. Say so here
+        # rather than letting it surface downstream as an unexplained collapse.
+        raise RuntimeError(f"{path.rsplit('/', 1)[-1]}: all {failed} scoreboard "
+                           f"request(s) failed — refusing to treat that as 'no events'")
     return out
 
 

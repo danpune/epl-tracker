@@ -6,7 +6,7 @@ Guards the two things that would corrupt data silently:
   2. the club-name normaliser that joins openfootball's names to ESPN's
 """
 import json, os, sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from fetch_data import key, resolve, UK
 
 # 1. name normaliser: the two feeds spell the same club differently
@@ -21,6 +21,12 @@ to_utc = lambda d, t: (datetime.strptime(f"{d} {t}", "%Y-%m-%d %H:%M")
 assert to_utc("2026-08-22", "15:00") == "14:00Z", "August is BST (UTC+1)"
 assert to_utc("2026-12-26", "15:00") == "15:00Z", "December is GMT (UTC+0)"
 assert to_utc("2026-08-22", "12:30") == "11:30Z", "cross-checked against ESPN's own feed"
+# the boundary itself, where a naive offset actually breaks: BST ends 25 Oct 2026,
+# starts again 28 Mar 2027. August and December never catch an error in the rule.
+assert to_utc("2026-10-24", "15:00") == "14:00Z", "day before the clocks go back"
+assert to_utc("2026-10-25", "15:00") == "15:00Z", "clocks went back overnight"
+assert to_utc("2027-03-27", "15:00") == "15:00Z", "day before the clocks go forward"
+assert to_utc("2027-03-28", "15:00") == "14:00Z", "clocks went forward overnight"
 
 # 3. Kalshi label resolution: short labels must land on the right club, and an
 #    ambiguous one must resolve to nothing rather than guess (wrong odds > no odds)
@@ -82,5 +88,16 @@ if os.path.exists("data.json"):
             assert not m.get("done"), "settled match should not carry live odds"
 else:
     print("(no data.json yet — ran source checks only)")
+
+# A silent build step is the same failure as a silent fetch: `|| true` on
+# build_scorers means a persistent crash shows up only as a table that stops
+# growing. Every finished match older than a day should have been parsed.
+if os.path.exists("scorers.json") and os.path.exists("data.json"):
+    sc = json.load(open("scorers.json")).get("matches", {})
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%MZ")
+    unparsed = [m["e"] for m in d["matches"]
+                if m.get("done") and m.get("e") and m["utc"] < cutoff and m["e"] not in sc]
+    assert not unparsed, (f"{len(unparsed)} finished matches missing from scorers.json, "
+                          f"e.g. {unparsed[0]} — build_scorers is failing silently")
 
 print("all checks passed")

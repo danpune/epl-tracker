@@ -107,7 +107,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .tm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pts{font-weight:800}
 .scorers{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:18px}
-.scorers h3{margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.scorers h2{margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .sc1{display:flex;align-items:center;gap:9px;font-size:14px;padding:6px 0;border-top:1px solid var(--line)}
 .sc1:first-of-type{border-top:0}
 .sc1 .r{color:var(--muted);width:16px;font-variant-numeric:tabular-nums;flex:0 0 auto;font-size:12px}
@@ -192,7 +192,7 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 .clubcell:hover span{text-decoration:underline}
 .h2h{display:flex;gap:2px;height:22px;border-radius:6px;overflow:hidden;margin:2px 0 8px;font-size:10.5px;font-weight:800}
 .h2h div{display:flex;align-items:center;justify-content:center;color:#fff;min-width:0;white-space:nowrap;overflow:hidden}
-.h2h .a{background:var(--club)}.h2h .d{background:#9b93a6}.h2h .b{background:#6b6377}
+.h2h .a{background:var(--club)}.h2h .d{background:#6b6377}.h2h .b{background:#4f4959}
 .h2hl{font-size:12px;color:var(--muted);margin-bottom:8px}
 .h2hm{font-size:12.5px;padding:3px 0;border-top:1px solid var(--line);display:flex;gap:8px}
 .h2hm .ss{color:var(--muted);width:52px;flex:0 0 auto;font-variant-numeric:tabular-nums}
@@ -215,16 +215,17 @@ tr.me.cl td:first-child,tr.me.rel td:first-child{box-shadow:inset 3px 0 0 var(--
 /* the pills must stay 15px to fit a 375px table, so grow only the tap area, vertically
    (the 2px gap splits evenly, so neighbours never overlap): 15x39 hit target */
 .formpill i{position:relative}.formpill i::after{content:"";position:absolute;inset:-12px -1px}
-.formpill .fw{background:#137a4a}.formpill .fd{background:#9b93a6}.formpill .fl{background:#c0392b}
+.formpill .fw{background:#137a4a}.formpill .fd{background:#6b6377}.formpill .fl{background:#c0392b}
 .tv{font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);
   border-radius:5px;padding:2px 6px;white-space:nowrap;flex:0 1 auto;min-width:0;
   max-width:104px;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:560px){.tv{max-width:56px}}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .cbadge{font-size:9.5px;letter-spacing:.07em;font-weight:800;text-transform:uppercase;border-radius:4px;padding:2px 5px;background:var(--bg);border:1px solid var(--line);color:var(--muted);flex:0 0 auto}
 .cbadge.ucl{background:#e0e9f7;color:#1a4a8a}.cbadge.fa{background:#fbe8e4;color:#a8341c}.cbadge.efl{background:#e6f0e8;color:#1c6b45}
 .odds{display:flex;gap:1px;margin:0 0 7px;border-radius:0 0 9px 9px;overflow:hidden;height:20px;font-size:10px;font-weight:700}
 .odds div{display:flex;align-items:center;justify-content:center;color:#fff;min-width:0;overflow:hidden;white-space:nowrap}
-.odds .oh{background:#4a2a6b}.odds .od{background:#9b93a6}.odds .oa{background:#6b4a8a}
+.odds .oh{background:#4a2a6b}.odds .od{background:#6b6377}.odds .oa{background:#6b4a8a}
 .owrap{margin-bottom:7px}
 .owrap .m{margin-bottom:0;border-radius:10px 10px 0 0}
 .olab{font-size:11px;color:var(--muted);margin:-2px 0 9px;padding-left:2px}
@@ -271,6 +272,7 @@ footer a{color:var(--club-ink)}
   .more{min-height:48px}
   .hlc,.vcard{padding:10px}
 }
+@media(max-width:400px){th,td{padding-left:4px;padding-right:4px}}   /* table was 2px wider than the page */
 @media(max-width:560px){
   .m .go{display:none}          /* decoration; the whole row is already tappable */
   .m .tv{display:none}          /* shown in the hero and in the match panel instead */
@@ -280,6 +282,9 @@ footer a{color:var(--club-ink)}
   .form-col{display:table-cell}
   .m .side span{font-size:13px}
   .picker .tz{margin-left:0;width:100%}
+  /* float the badge out of the flex row so it stops squeezing the club names */
+  .m{position:relative}
+  .m .cbadge{position:absolute;top:-7px;right:10px;font-size:8.5px;padding:0 4px}
 }
 /* Dark-mode component overrides live HERE, after the rules they override.
    Declared earlier they lose the cascade at equal specificity — that is how the
@@ -287,7 +292,6 @@ footer a{color:var(--club-ink)}
 @media (prefers-color-scheme: dark){
   tr.me td{background:color-mix(in srgb,var(--club) 26%,#1e1826)}
   .sbar .t,.bar .t{background:#2a2333}
-  .formpill .fd{background:#6b6377}
   .cbadge{background:#241d2e}
   .wx,.tv{background:#241d2e}
   nav button.on,.chipbar button.on{border-color:var(--club-ink)}
@@ -381,8 +385,10 @@ function nextOpp(k){
     return (x.h === k || x.a === k) && !x.done && dt(x).getTime() > now - 7200000; })[0];
   if (!m) return '<span style="color:var(--muted)">–</span>';
   var opp = m.h === k ? m.a : m.h;
+  var where = m.h === k ? 'home to ' : 'away to ';
   return '<div class="nx" title="'+esc(team(opp).name)+(m.h===k?' (H)':' (A)')+'">'
-       + crest(opp) + '<span>'+(m.h === k ? 'H' : 'A')+'</span></div>';
+       + crest(opp) + '<span aria-hidden="true">'+(m.h === k ? 'H' : 'A')+'</span>'
+       + '<span class="sr">'+esc(where + team(opp).name)+'</span></div>';
 }
 
 function scorersBlock(){
@@ -394,7 +400,7 @@ function scorersBlock(){
     .sort(function(a, b){ return (b.l - a.l) || (b.g - a.g) || a.n.localeCompare(b.n); })
     .slice(0, 10);
   if (!list.length) return '';
-  return '<div class="scorers"><h3>Top scorers \u00b7 Premier League</h3>'
+  return '<div class="scorers"><h2>Top scorers \u00b7 Premier League</h2>'
     + list.map(function(p, i){
         var k = byId[p.t], extra = p.g > p.l ? ' <span class="cup">+'+(p.g - p.l)+' in cups</span>' : '';
         return '<div class="sc1"><span class="r">'+(i+1)+'</span>'
@@ -758,7 +764,9 @@ function matchRow(m){
     + badge
     + (m.note ? '<div class="tv" title="'+esc(m.note)+'">'+esc(m.note.replace(/ on penalties$/, ' on pens'))+'</div>' : '')
     + (m.tv ? '<div class="tv" title="US broadcast">'+esc(m.tv.join(' / '))+'</div>' : '')
-    + (m.done ? '<button class="playbtn" data-play="'+m._i+'" title="'
+    + (m.done ? '<button class="playbtn" data-play="'+m._i+'" aria-label="'
+        +(hlFor(m) ? 'Play highlights: ' : 'Search highlights: ')
+        +esc(team(m.h).short+' versus '+team(m.a).short)+'" title="'
         +(hlFor(m) ? 'Play official video' : 'Search YouTube for highlights')+'">\u25b6</button>' : '')
     + '<div class="go">\u203a</div>'
     + '</div>';
@@ -892,10 +900,13 @@ function streakText(k){
   if (!f.length) return '';
   var last = f[f.length-1], n = 0;
   for (var i = f.length-1; i >= 0 && f[i] === last; i--) n++;
-  if (n < 2) return {W:'Won the last one.', D:'Drew the last one.', L:'Lost the last one.'}[last] || '';
-  return {W:n+' wins in a row \u2014 keep it going.',
-          D:n+' draws in a row.',
-          L:n+' straight defeats.'}[last] || '';
+  // formOf is league-only, but the share card's 'last result' counts every
+  // competition — so say which this is, rather than contradicting the card.
+  if (n < 2) return {W:'Won the last league game.', D:'Drew the last league game.',
+                     L:'Lost the last league game.'}[last] || '';
+  return {W:n+' league wins in a row \u2014 keep it going.',
+          D:n+' league draws in a row.',
+          L:n+' straight league defeats.'}[last] || '';
 }
 
 // ESPN gives Spurs, Fulham and Leeds a primary colour of #ffffff. --club is painted
@@ -1040,7 +1051,7 @@ function renderHero(){
 
   document.getElementById('heroGo').onclick = function(){
     TAB = 'fix';
-    document.querySelectorAll('nav button').forEach(function(x){ x.classList.toggle('on', x.dataset.t === 'fix'); });
+    markTab();
     render();
     setTimeout(function(){
       var row = view.querySelector('.m[data-i="'+next._i+'"]');
@@ -1132,7 +1143,7 @@ function openSquad(k){
       ps.sort(function(a, b){ return (+a.jersey || 99) - (+b.jersey || 99); }).forEach(function(p){
         html += '<div class="sqp"><span class="no">'+esc(p.jersey || '')+'</span>'
               + '<span>'+esc(p.displayName || '')+'</span>'
-              + '<span class="ag">'+(p.age ? p.age : '')+'</span></div>';
+              + '<span class="ag">'+(p.age ? esc(p.age) : '')+'</span></div>';
       });
       html += '</div>';
     });
@@ -1482,12 +1493,17 @@ function render(){
   else renderTZ();
 }
 
+function markTab(){
+  document.querySelectorAll('nav button').forEach(function(x){
+    var on = x.dataset.t === TAB;
+    x.classList.toggle('on', on);
+    x.setAttribute('aria-pressed', on ? 'true' : 'false');   // .on alone told AT nothing
+  });
+}
 document.querySelectorAll('nav button').forEach(function(b){
-  b.onclick = function(){
-    document.querySelectorAll('nav button').forEach(function(x){ x.classList.remove('on'); });
-    b.classList.add('on'); TAB = b.dataset.t; render();
-  };
+  b.onclick = function(){ TAB = b.dataset.t; markTab(); render(); };
 });
+markTab();
 
 // Data files are rewritten every ~30 minutes. Without this a returning visitor is
 // served yesterday's scores out of the browser cache. ?t= defeats proxies that
