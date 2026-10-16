@@ -446,6 +446,36 @@ def write_calendars(data):
     print(f"  wrote {len(os.listdir('ics'))} subscribable calendars")
 
 
+def refuse_on_collapse(data):
+    """Refuse to publish a file that lost a large slice of what the last one had.
+
+    Every guard here checked that the data was well-FORMED, never that it was
+    COMPLETE, so a partial upstream failure wrote a smaller file that passed
+    everything: `season_events` and `fetch_recent` swallow per-year and per-month
+    errors, and a scoreboard-only outage ships 380 league fixtures with no cup
+    ties, no event ids and the last fortnight's results reverted to unplayed —
+    which also rewrites every calendar UID, so subscribers lose and re-add the
+    whole season.
+
+    Counts only grow inside a season, so a real fall means an upstream failure.
+    A new season legitimately resets them, hence the season check.
+    """
+    try:
+        old = json.load(open("data.json"))
+    except Exception:
+        return                                   # first run, or unreadable: nothing to compare
+    if old.get("season") != data["season"]:
+        return                                   # new season starts over; counts reset by design
+    count = lambda d, f: sum(1 for m in d["matches"] if f(m))
+    for label, now_n, was_n in (
+            ("matches",   len(data["matches"]), len(old["matches"])),
+            ("event ids", count(data, lambda m: m.get("e")), count(old, lambda m: m.get("e"))),
+            ("played",    count(data, lambda m: m.get("done")), count(old, lambda m: m.get("done")))):
+        if now_n < was_n * 0.9:
+            sys.exit(f"refusing to write: {label} fell {was_n} -> {now_n} "
+                     f"(upstream partial failure, not a real change)")
+
+
 def main():
     matches = fetch_season()
     table, teams = fetch_table()
@@ -520,6 +550,7 @@ def main():
             "season": SEASON.replace("-", "/"), "teams": teams,
             "paths": {"PL": "eng.1", "UCL": "uefa.champions", "FA": "eng.fa", "EFL": "eng.league_cup"},
             "table": table, "matches": matches}
+    refuse_on_collapse(data)
     with open("data.json", "w") as f:
         json.dump(data, f, separators=(",", ":"))
     write_calendars(data)
