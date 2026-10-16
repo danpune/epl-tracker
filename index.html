@@ -1279,17 +1279,33 @@ function renderHighlights(){
 // 30 minutes and actually gets ~3.4 hours. That is fine for fixtures and the table,
 // but it is not live. ESPN's scoreboard is CORS-open, so on match days the page
 // refreshes scores itself and does not wait for the next commit.
-var liveTimer = null;
+var liveTimer = null, liveFailed = false;   // liveFailed: every live request failed, so say so
 
+function utcDay(ms){
+  var d = new Date(ms);
+  return d.getUTCFullYear() + ('0'+(d.getUTCMonth()+1)).slice(-2) + ('0'+d.getUTCDate()).slice(-2);
+}
+
+// Which competitions are on, and which UTC days to ask ESPN for. Returns
+// [{c: 'PL', days: ['20261017']}, ...] — one entry per competition in play.
 function liveWindow(){
   var now = Date.now(), comps = {};
   D.matches.forEach(function(m){
     var t = dt(m).getTime();
     // `|| m.live` is what makes this self-healing: a stale live flag from an older
     // commit keeps its competition in the poll set until ESPN says the match is over.
-    if ((t > now - 4 * 3600e3 && t < now + 3600e3) || m.live) comps[m.c || 'PL'] = true;
+    if (!((t > now - 4 * 3600e3 && t < now + 3600e3) || m.live)) return;
+    var c = m.c || 'PL', days = comps[c] || (comps[c] = {});
+    days[utcDay(t)] = true;
+    // ESPN files an event under its VENUE's local day, so a kickoff near a UTC
+    // midnight can sit on the neighbouring date. English kickoffs (11:30-20:00Z)
+    // never come close, so in practice this adds no request — but it is the guard
+    // the old ±1-day range was really providing.
+    var h = new Date(t).getUTCHours();
+    if (h >= 22) days[utcDay(t + 864e5)] = true;
+    if (h < 2)   days[utcDay(t - 864e5)] = true;
   });
-  return Object.keys(comps);
+  return Object.keys(comps).map(function(c){ return {c: c, days: Object.keys(comps[c])}; });
 }
 
 // Fold one finished league result into the standings so the table cannot disagree
@@ -1339,21 +1355,39 @@ function applyLive(events){
   return changed;
 }
 
+// The build time, plus a note when the browser's own live refresh is failing. A
+// silent poller is how the Sept 2026 ESPN change went unnoticed for two weeks.
+function stampUpd(){
+  var el = document.getElementById('upd');
+  if (!el) return;
+  el.textContent = 'Updated ' + new Date(D.updated).toLocaleString()
+    + (liveFailed ? ' \u00b7 live scores unavailable right now' : '');
+}
+
 function pollLive(){
   var comps = liveWindow();
   if (!comps.length){ liveTimer = setTimeout(pollLive, 15 * 60e3); return; }   // nothing on; check back later
-  var day = function(off){
-    var d = new Date(Date.now() + off * 86400e3);
-    return d.getUTCFullYear() + ('0'+(d.getUTCMonth()+1)).slice(-2) + ('0'+d.getUTCDate()).slice(-2);
-  };
-  var range = day(-1) + '-' + day(1);                       // covers every timezone edge
-  Promise.all(comps.map(function(c){
-    var path = (D.paths || {})[c] || 'eng.1';
-    return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/'+path+'/scoreboard?dates='+range+'&limit=200')
-      .then(function(r){ return r.ok ? r.json() : null; })
+  // ESPN stopped accepting dates=YYYYMMDD-YYYYMMDD in Sept 2026 (HTTP 400 on every
+  // range), which killed this poller silently — r.ok was false, the 400 became an
+  // empty event list, and nothing on the page said so. One request per competition
+  // per matchday instead; a whole month is a 400KB payload, far too heavy to poll.
+  var reqs = [];
+  comps.forEach(function(w){
+    var path = (D.paths || {})[w.c] || 'eng.1';
+    w.days.forEach(function(d){ reqs.push({path: path, day: d}); });
+  });
+  var failed = 0;
+  Promise.all(reqs.map(function(q){
+    return getJSON('https://site.api.espn.com/apis/site/v2/sports/soccer/'+q.path+'/scoreboard?dates='+q.day+'&limit=200')
+      .then(function(r){
+        if (!r.ok){ failed++; console.warn('live poll ' + q.path + ' ' + q.day + ': HTTP ' + r.status); return null; }
+        return r.json();
+      })
       .then(function(j){ return (j && j.events) || []; })
-      .catch(function(){ return []; });
+      .catch(function(e){ failed++; console.warn('live poll ' + q.path + ' ' + q.day + ':', e); return []; });
   })).then(function(lists){
+    if (failed === reqs.length) liveFailed = true;          // every call failed: say so, don't pretend
+    else if (!failed) liveFailed = false;
     var evs = lists.reduce(function(a, b){ return a.concat(b); }, []);
     if (applyLive(evs)){
       // keep the open match panel across the refresh — the detail is cached, so
@@ -1371,6 +1405,7 @@ function pollLive(){
         if (row) row.click();
       }
     }
+    stampUpd();
     var anyLive = D.matches.some(function(m){ return m.live; });
     liveTimer = setTimeout(pollLive, anyLive ? 60e3 : 5 * 60e3);
   }).catch(function(){
@@ -1483,7 +1518,7 @@ getJSON('data.json').then(function(r){ return r.json(); }).then(function(d){
   document.getElementById('sub').textContent = D.season + ' season · ' + D.table.length
     + ' clubs · ' + lg.length + ' matches · 38 each';
   document.getElementById('tz').textContent = 'Times in ' + TZ;
-  document.getElementById('upd').textContent = 'Updated ' + new Date(D.updated).toLocaleString();
+  stampUpd();
   render();
   pollLive();
 }).catch(function(e){
